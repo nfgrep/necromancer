@@ -1,61 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"math"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
 )
 
-//func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {
-//	row := y1
-//	col := x1
-//	for _, r := range []rune(text) {
-//		s.SetContent(col, row, r, nil, style)
-//		col++
-//		if col >= x2 {
-//			row++
-//			col = x1
-//		}
-//		if row > y2 {
-//			break
-//		}
-//	}
-//}
-
-//func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style) {
-//	if y2 < y1 {
-//		y1, y2 = y2, y1
-//	}
-//	if x2 < x1 {
-//		x1, x2 = x2, x1
-//	}
-//
-//	// Fill background
-//	for row := y1; row <= y2; row++ {
-//		for col := x1; col <= x2; col++ {
-//			s.SetContent(col, row, ' ', nil, style)
-//		}
-//	}
-//
-//	// Draw borders
-//	for col := x1; col <= x2; col++ {
-//		s.SetContent(col, y1, tcell.RuneHLine, nil, style)
-//		s.SetContent(col, y2, tcell.RuneHLine, nil, style)
-//	}
-//	for row := y1 + 1; row < y2; row++ {
-//		s.SetContent(x1, row, tcell.RuneVLine, nil, style)
-//		s.SetContent(x2, row, tcell.RuneVLine, nil, style)
-//	}
-//
-//	// Only draw corners if necessary
-//	if y1 != y2 && x1 != x2 {
-//		s.SetContent(x1, y1, tcell.RuneULCorner, nil, style)
-//		s.SetContent(x2, y1, tcell.RuneURCorner, nil, style)
-//		s.SetContent(x1, y2, tcell.RuneLLCorner, nil, style)
-//		s.SetContent(x2, y2, tcell.RuneLRCorner, nil, style)
-//	}
-//}
+func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {
+	row := y1
+	col := x1
+	for _, r := range []rune(text) {
+		s.SetContent(col, row, r, nil, style)
+		col++
+		if col >= x2 {
+			row++
+			col = x1
+		}
+		if row > y2 {
+			break
+		}
+	}
+}
 
 var worldMap = [][]int{
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -115,9 +83,60 @@ func drawBar(s tcell.Screen, x, ytop, ybot int, style tcell.Style) {
 	}
 }
 
+func intAbs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+// Some fancy version of bresenhams
+// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+// http://members.chello.at/~easyfilter/Bresenham.pdf
+func plotLine(screen tcell.Screen, x0, y0, x1, y1 int, style tcell.Style) {
+	dx := intAbs(x1 - x0)
+	dy := -intAbs(y1 - y0)
+	sx := -1
+	if x0 < x1 {
+		sx = 1
+	}
+	sy := -1
+	if y0 < y1 {
+		sy = 1
+	}
+	er := dx + dy
+
+	for {
+		//screen.SetContent(x0, y0, ' ', nil, style)
+		setContentEqualWidth(screen, x0, y0, ' ', nil, style)
+
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+
+		e2 := 2 * er
+		if e2 >= dy {
+			if x0 == x1 {
+				break
+			}
+			er = er + dy
+			x0 = x0 + sx
+		}
+
+		if e2 <= dx {
+			if y0 == y1 {
+				break
+			}
+			er = er + dx
+			y0 = y0 + sy
+		}
+	}
+}
+
 type Player struct {
-	x int
-	y int
+	x   int
+	y   int
+	rot float64
 }
 
 // Moves player if possible, i.e. if there's no wall in the way
@@ -130,10 +149,54 @@ func (p *Player) move(dx, dy int, worldMap [][]int) {
 	}
 }
 
-var player = &Player{x: 2, y: 2}
+func (p *Player) rotate(rad float64) {
+	p.rot += rad
+	// Wrap around. 0 rad == 2PI
+	if p.rot >= (2 * math.Pi) {
+		p.rot -= (2 * math.Pi)
+	}
+	if p.rot <= 0 {
+		p.rot += (2 * math.Pi)
+	}
+}
+
+var player = &Player{x: 2, y: 2, rot: 0.0}
 
 func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
-	setContentEqualWidth(screen, player.x, player.y, 'P', nil, style)
+	setContentEqualWidth(screen, player.x, player.y, ' ', nil, style)
+	// Get slope from rot in rad
+	m := math.Tan(player.rot)
+
+	// Get rise + run from slope in decimal form
+	// https://www.mathsisfun.com/converting-decimals-fractions.html
+	dy := int(m * 1000000000000) // Lets hope 100 is big enough to turn this into an int without precision issues
+	dx := 1000000000000
+
+	divisor := gcd(dx, dy)
+	dy /= divisor
+	dx /= divisor
+
+	// If we're between pi/2 and 3pi/2, i.e. in the left half
+	if m > (math.Pi/2) && m < ((3*math.Pi)/2) {
+		dx = -dx
+	}
+
+	// Ohh boy, this is gonna be messy
+	x1 := player.x + dx
+	y1 := player.y + dy
+
+	drawText(screen, 2, 5, 50, 5, style, fmt.Sprintf("rot: %v", player.rot))
+	drawText(screen, 2, 15, 50, 15, style, fmt.Sprintf("x1: %v, y1: %v", x1, y1))
+	plotLine(screen, player.x, player.y, x1, y1, style)
+}
+
+// GCDRemainder calculates GCD iteratively using remainder.
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+
+	return a
 }
 
 func main() {
@@ -188,7 +251,7 @@ func handleInput(s tcell.Screen) {
 			s.Sync()
 		} else if ev.Rune() == 'C' || ev.Rune() == 'c' {
 			s.Clear()
-		} else if ev.Rune() == 'w' {
+		} else if ev.Rune() == 'w' { // Movement
 			player.move(0, -1, worldMap)
 		} else if ev.Rune() == 'a' {
 			player.move(-1, 0, worldMap)
@@ -196,6 +259,10 @@ func handleInput(s tcell.Screen) {
 			player.move(0, 1, worldMap)
 		} else if ev.Rune() == 'd' {
 			player.move(1, 0, worldMap)
+		} else if ev.Rune() == 'n' { // Rotation TODO: make arrow keys
+			player.rotate(0.1)
+		} else if ev.Rune() == 'm' {
+			player.rotate(-0.1)
 		}
 		//case *tcell.EventMouse:
 		//	x, y := ev.Position()
