@@ -99,7 +99,7 @@ func intAbs(x int) int {
 // http://members.chello.at/~easyfilter/Bresenham.pdf
 
 // Returns the distance the ray got before colliding.
-func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) int {
+func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) float64 {
 	dx := intAbs(x1 - x0)
 	dy := -intAbs(y1 - y0)
 	sx := -1
@@ -115,12 +115,14 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 	x := x0
 	y := y0
 
-	dist := 0
+	rayLen := math.Sqrt(math.Pow(float64(x1-x0), 2) + math.Pow(float64(y1-y0), 2))
+	dist := rayLen
 	for {
 		setContentEqualWidth(screen, x, y, ' ', nil, style)
 
 		// Get dists for drawing 3D scene
 		if worldMap[y][x] == 1 {
+			dist = math.Sqrt(math.Pow(float64(x-x0), 2) + math.Pow(float64(y-y0), 2))
 			break
 		}
 
@@ -144,8 +146,6 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 			er = er + dx
 			y = y + sy
 		}
-
-		dist += 1
 	}
 	return dist
 }
@@ -258,7 +258,7 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 		rx1 := player.x + int(math.Cos(ray.rot)*float64(player.viewLen))
 		ry1 := player.y + int(math.Sin(ray.rot)*float64(player.viewLen))
 		rayDist := castRay(screen, worldMap, player.x, player.y, rx1, ry1, style)
-		dists = append(dists, rayDist)
+		dists = append(dists, int(rayDist))
 		drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
 	}
 
