@@ -47,14 +47,14 @@ var worldMap = [][]int{
 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-	{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 	{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 }
 
@@ -76,10 +76,12 @@ func drawMap(s tcell.Screen, inMap [][]int, style tcell.Style) {
 	}
 }
 
-// where ytop <= ybot
-func drawBar(s tcell.Screen, x, ytop, ybot int, style tcell.Style) {
+// Draws a vertivcal bar centered about y
+func drawBar(s tcell.Screen, x, y, height int, style tcell.Style) {
+	ytop := y - (height / 2)
+	ybot := y + (height / 2)
 	for y := ytop; y <= ybot; y++ {
-		s.SetContent(x, y, ' ', nil, style)
+		setContentEqualWidth(s, x, y, ' ', nil, style)
 	}
 }
 
@@ -90,10 +92,14 @@ func intAbs(x int) int {
 	return x
 }
 
+// TODO: fucking god damnit this is messy
+
 // Some fancy version of bresenhams
 // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 // http://members.chello.at/~easyfilter/Bresenham.pdf
-func plotLine(screen tcell.Screen, x0, y0, x1, y1 int, style tcell.Style) {
+
+// Returns the distance the ray got before colliding.
+func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) int {
 	dx := intAbs(x1 - x0)
 	dy := -intAbs(y1 - y0)
 	sx := -1
@@ -106,37 +112,54 @@ func plotLine(screen tcell.Screen, x0, y0, x1, y1 int, style tcell.Style) {
 	}
 	er := dx + dy
 
-	for {
-		//screen.SetContent(x0, y0, ' ', nil, style)
-		setContentEqualWidth(screen, x0, y0, ' ', nil, style)
+	x := x0
+	y := y0
 
-		if x0 == x1 && y0 == y1 {
+	dist := 0
+	for {
+		setContentEqualWidth(screen, x, y, ' ', nil, style)
+
+		// Get dists for drawing 3D scene
+		if worldMap[y][x] == 1 {
+			break
+		}
+
+		if x == x1 && y == y1 {
 			break
 		}
 
 		e2 := 2 * er
 		if e2 >= dy {
-			if x0 == x1 {
+			if x == x1 {
 				break
 			}
 			er = er + dy
-			x0 = x0 + sx
+			x = x + sx
 		}
 
 		if e2 <= dx {
-			if y0 == y1 {
+			if y == y1 {
 				break
 			}
 			er = er + dx
-			y0 = y0 + sy
+			y = y + sy
 		}
+
+		dist += 1
 	}
+	return dist
+}
+
+type Ray struct {
+	rot float64 // Relative to player rot
 }
 
 type Player struct {
-	x   int
-	y   int
-	rot float64
+	x       int
+	y       int
+	rot     float64
+	rays    []*Ray
+	viewLen int
 }
 
 // Moves player if possible, i.e. if there's no wall in the way
@@ -149,60 +172,113 @@ func (p *Player) move(dx, dy int, worldMap [][]int) {
 	}
 }
 
+// Takes rot in radians, returns the value between 0, 2pi
+func rotWrap(rot float64) float64 {
+	// Hopefully this is pass-by-val
+	if rot >= (2 * math.Pi) {
+		rot -= (2 * math.Pi)
+	}
+	if rot <= 0 {
+		rot += (2 * math.Pi)
+	}
+	return rot
+}
+
 func (p *Player) rotate(rad float64) {
 	p.rot += rad
-	// Wrap around. 0 rad == 2PI
-	if p.rot >= (2 * math.Pi) {
-		p.rot -= (2 * math.Pi)
-	}
-	if p.rot <= 0 {
-		p.rot += (2 * math.Pi)
+	p.rot = rotWrap(p.rot)
+
+	// Update ray positions
+	for _, ray := range player.rays {
+		ray.rot += rad
+		ray.rot = rotWrap(ray.rot)
 	}
 }
 
-var player = &Player{x: 2, y: 2, rot: 0.0}
+// TODO: single ray dist, i.e. "viewLen" or something on Player
+var player = &Player{
+	x: 2, y: 2,
+	rot: 0.0,
+	rays: []*Ray{
+		{rot: -0.55},
+		{rot: -0.5},
+		{rot: -0.45},
+		{rot: -0.4},
+		{rot: -0.35},
+		{rot: -0.3},
+		{rot: -0.25},
+		{rot: -0.2},
+		{rot: -0.15},
+		{rot: -0.1},
+		{rot: -0.05},
+		{rot: 0.0},
+		{rot: 0.05},
+		{rot: 0.1},
+		{rot: 0.15},
+		{rot: 0.2},
+		{rot: 0.25},
+		{rot: 0.3},
+		{rot: 0.35},
+		{rot: 0.4},
+		{rot: 0.45},
+		{rot: 0.5},
+		{rot: 0.55},
+	},
+	viewLen: 70,
+}
 
 func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
+
+	// Draw the player
 	setContentEqualWidth(screen, player.x, player.y, ' ', nil, style)
-	// Get slope from rot in rad
-	m := math.Tan(player.rot)
 
-	// Get rise + run from slope in decimal form
-	// https://www.mathsisfun.com/converting-decimals-fractions.html
-	dy := int(m * 1000000000000) // Lets hope 100 is big enough to turn this into an int without precision issues
-	dx := 1000000000000
-
-	divisor := gcd(dx, dy)
-	dy /= divisor
-	dx /= divisor
-
-	// If we're between pi/2 and 3pi/2, i.e. in the left half
-	if m > (math.Pi/2) && m < ((3*math.Pi)/2) {
-		dx = -dx
-	}
-
-	// Ohh boy, this is gonna be messy
-	x1 := player.x + dx
-	y1 := player.y + dy
-
+	// Some debug
 	drawText(screen, 2, 5, 50, 5, style, fmt.Sprintf("rot: %v", player.rot))
-	drawText(screen, 2, 15, 50, 15, style, fmt.Sprintf("x1: %v, y1: %v", x1, y1))
-	plotLine(screen, player.x, player.y, x1, y1, style)
 }
 
-// GCDRemainder calculates GCD iteratively using remainder.
-func gcd(a, b int) int {
-	for b != 0 {
-		a, b = b, a%b
+// We do drawing right in castRay, TODO: factor drawing and dist-getting out
+//func drawRays(screen tcell.Screen, player *Player, worldMap [][]int, style tcell.Style) {
+//	// Draw the rays
+//	for i, ray := range player.rays {
+//		rx1 := player.x + int(math.Cos(ray.rot)*float64(ray.len))
+//		ry1 := player.y + int(math.Sin(ray.rot)*float64(ray.len))
+//		castRay(screen, worldMap, player.x, player.y, rx1, ry1, style)
+//		drawText(screen, 2, i+10, 50, i+15, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v", i, ray.rot, rx1, ry1))
+//	}
+//}
+
+// TODO: don't write to global, return this from a func
+// These might need to be floats, but lets try ints first
+//var dists = []int{}
+
+func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcell.Style) {
+	// Get distances
+	dists := []int{}
+	for i, ray := range player.rays {
+		rx1 := player.x + int(math.Cos(ray.rot)*float64(player.viewLen))
+		ry1 := player.y + int(math.Sin(ray.rot)*float64(player.viewLen))
+		rayDist := castRay(screen, worldMap, player.x, player.y, rx1, ry1, style)
+		dists = append(dists, rayDist)
+		drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
 	}
 
-	return a
+	// Draw bar for each distance
+	offset := len(worldMap[0]) // So that we render off to the right of the map, *2 because we're using double width
+	for i, dist := range dists {
+		if dist == player.viewLen {
+			continue
+		}
+		drawBar(screen, i+offset, 10, 50-dist, style)
+	}
 }
 
 func main() {
+	// TODO: make these styles global consts or sometething?
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
+	sceneStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
 	playerStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorGreen)
+	//rayStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
 
 	// Initialize screen
 	s, err := tcell.NewScreen()
@@ -227,7 +303,9 @@ func main() {
 		//for i := 0; i < 200; i++ {
 		//	drawBar(s, i+px, 0, 20, boxStyle)
 		//}
+		//drawRays(s, player, worldMap, rayStyle)
 		drawPlayer(s, player, playerStyle)
+		drawScene(s, player, worldMap, sceneStyle)
 		drawMap(s, worldMap, boxStyle)
 		s.Show()
 
