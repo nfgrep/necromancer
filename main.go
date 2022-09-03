@@ -12,7 +12,7 @@ import (
 func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {
 	row := y1
 	col := x1
-	for _, r := range []rune(text) {
+	for _, r := range text {
 		s.SetContent(col, row, r, nil, style)
 		col++
 		if col >= x2 {
@@ -150,51 +150,6 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 	return dist
 }
 
-type Ray struct {
-	rot float64 // Relative to player rot
-}
-
-type Player struct {
-	x       int
-	y       int
-	rot     float64
-	rays    []*Ray
-	viewLen int
-}
-
-// Moves player if possible, i.e. if there's no wall in the way
-func (p *Player) move(dx, dy int, worldMap [][]int) {
-	newX := player.x + dx
-	newY := player.y + dy
-	if worldMap[newY][newX] == 0 {
-		player.x += dx
-		player.y += dy
-	}
-}
-
-// Takes rot in radians, returns the value between 0, 2pi
-func rotWrap(rot float64) float64 {
-	// Hopefully this is pass-by-val
-	if rot >= (2 * math.Pi) {
-		rot -= (2 * math.Pi)
-	}
-	if rot <= 0 {
-		rot += (2 * math.Pi)
-	}
-	return rot
-}
-
-func (p *Player) rotate(rad float64) {
-	p.rot += rad
-	p.rot = rotWrap(p.rot)
-
-	// Update ray positions
-	for _, ray := range player.rays {
-		ray.rot += rad
-		ray.rot = rotWrap(ray.rot)
-	}
-}
-
 // TODO: single ray dist, i.e. "viewLen" or something on Player
 var player = &Player{
 	x: 2, y: 2,
@@ -228,9 +183,8 @@ var player = &Player{
 }
 
 func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
-
 	// Draw the player
-	setContentEqualWidth(screen, player.x, player.y, ' ', nil, style)
+	setContentEqualWidth(screen, int(player.x), int(player.y), ' ', nil, style)
 
 	// Some debug
 	drawText(screen, 2, 5, 50, 5, style, fmt.Sprintf("rot: %v", player.rot))
@@ -255,9 +209,9 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 	// Get distances
 	dists := []int{}
 	for i, ray := range player.rays {
-		rx1 := player.x + int(math.Cos(ray.rot)*float64(player.viewLen))
-		ry1 := player.y + int(math.Sin(ray.rot)*float64(player.viewLen))
-		rayDist := castRay(screen, worldMap, player.x, player.y, rx1, ry1, style)
+		rx1 := player.x + math.Cos(ray.rot)*float64(player.viewLen)
+		ry1 := player.y + math.Sin(ray.rot)*float64(player.viewLen)
+		rayDist := castRay(screen, worldMap, int(player.x), int(player.y), int(rx1), int(ry1), style)
 		dists = append(dists, int(rayDist))
 		drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
 	}
@@ -268,7 +222,7 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 		if dist == player.viewLen {
 			continue
 		}
-		drawBar(screen, i+offset, 10, 50-dist, style)
+		drawBar(screen, i+offset, 10, 40-dist, style)
 	}
 }
 
@@ -330,34 +284,17 @@ func handleInput(s tcell.Screen) {
 		} else if ev.Rune() == 'C' || ev.Rune() == 'c' {
 			s.Clear()
 		} else if ev.Rune() == 'w' { // Movement
-			player.move(0, -1, worldMap)
+			player.moveFwd(1, worldMap)
 		} else if ev.Rune() == 'a' {
-			player.move(-1, 0, worldMap)
+			player.moveLeft(1, worldMap)
 		} else if ev.Rune() == 's' {
-			player.move(0, 1, worldMap)
+			player.moveBack(1, worldMap)
 		} else if ev.Rune() == 'd' {
-			player.move(1, 0, worldMap)
+			player.moveRight(1, worldMap)
 		} else if ev.Rune() == 'n' { // Rotation TODO: make arrow keys
-			player.rotate(0.1)
-		} else if ev.Rune() == 'm' {
 			player.rotate(-0.1)
+		} else if ev.Rune() == 'm' {
+			player.rotate(0.1)
 		}
-		//case *tcell.EventMouse:
-		//	x, y := ev.Position()
-		//	button := ev.Buttons()
-		//	// Only process button events, not wheel events
-		//	button &= tcell.ButtonMask(0xff)
-
-		//	if button != tcell.ButtonNone && ox < 0 {
-		//		ox, oy = x, y
-		//	}
-		//	switch ev.Buttons() {
-		//	case tcell.ButtonNone:
-		//		if ox >= 0 {
-		//			label := fmt.Sprintf("%d,%d to %d,%d", ox, oy, x, y)
-		//			drawBox(s, ox, oy, x, y, boxStyle, label)
-		//			ox, oy = -1, -1
-		//		}
-		//	}
 	}
 }
