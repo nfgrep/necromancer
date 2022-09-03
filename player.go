@@ -7,10 +7,12 @@ type Ray struct {
 }
 
 type Player struct {
-	x       float64
-	y       float64
-	rot     float64
-	rays    []*Ray
+	x    float64
+	y    float64
+	rot  float64
+	rays []*Ray
+	//	rayCount    int
+	//	rayAngleGap float64
 	viewLen int
 }
 
@@ -73,10 +75,10 @@ func rotWrap(rot float64) float64 {
 func (p *Player) rotate(rad float64) {
 	p.rot += rad
 	p.rot = rotWrap(p.rot)
-
-	// Update ray positions
-	for _, ray := range player.rays {
-		ray.rot += rad
-		ray.rot = rotWrap(ray.rot)
-	}
 }
+
+//func (p *Player) generateRays() {
+//	for i := 0; i < p.rayCount; i++ {
+//
+//	}
+//}
