@@ -9,10 +9,6 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func Init() {
-
-}
-
 // TODO: single ray dist, i.e. "viewLen" or something on Player
 var player = &Player{
 	x: 2, y: 2,
@@ -119,12 +115,27 @@ func drawMap(s tcell.Screen, inMap [][]int, style tcell.Style) {
 	}
 }
 
+// Takes a verticle slice of a texture, and compresses it to fit within height
+func compressTextureSlice(texSlice []tcell.Style, height int) []tcell.Style {
+	compressedTex := []tcell.Style{}
+	// TODO: deal with when height > len(tex)
+	diff := len(texSlice) - height
+	//offset := len(texSlice) / diff
+	for i := 0; i < height; i += 1 {
+		if i%diff != 0 {
+			compressedTex = append(compressedTex, texSlice[i])
+		}
+	}
+	return compressedTex
+}
+
 // Draws a vertivcal bar centered about y
-func drawBar(s tcell.Screen, x, y, height int, style tcell.Style) {
-	ytop := y - (height / 2)
-	ybot := y + (height / 2)
+func drawBar(s tcell.Screen, screenX, screenY, height int, texSlice []tcell.Style) {
+	compressedTex := compressTextureSlice(texSlice, height)
+	ytop := screenY - (height / 2)
+	ybot := screenY + (height / 2)
 	for y := ytop; y <= ybot; y++ {
-		setContentEqualWidth(s, x, y, ' ', nil, style)
+		setContentEqualWidth(s, screenX, y, ' ', nil, compressedTex[y-ytop])
 	}
 }
 
@@ -135,6 +146,12 @@ func intAbs(x int) int {
 	return x
 }
 
+type Point struct {
+	x float64
+	y float64
+	// No z, yet...
+}
+
 // TODO: fucking god damnit this is messy
 
 // Some fancy version of bresenhams
@@ -143,7 +160,7 @@ func intAbs(x int) int {
 
 // Returns the distance, and the value of the map it intersected.
 // If no intersection, map value == 0
-func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) (float64, int) {
+func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) (float64, *Point) {
 	dx := intAbs(x1 - x0)
 	dy := -intAbs(y1 - y0)
 	sx := -1
@@ -161,14 +178,14 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 
 	rayLen := math.Sqrt(math.Pow(float64(x1-x0), 2) + math.Pow(float64(y1-y0), 2))
 	dist := rayLen
-	mapVal := 0
+	intersectionPoint := &Point{}
 	for {
 		setContentEqualWidth(screen, x, y, ' ', nil, style)
 
 		// Get dists for drawing 3D scene
 		if worldMap[y][x] != 0 {
 			dist = math.Sqrt(math.Pow(float64(x-x0), 2) + math.Pow(float64(y-y0), 2))
-			mapVal = worldMap[y][x]
+			intersectionPoint = &Point{float64(x), float64(y)}
 			break
 		}
 
@@ -193,7 +210,7 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 			y = y + sy
 		}
 	}
-	return dist, mapVal
+	return dist, intersectionPoint
 }
 
 func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
@@ -204,21 +221,96 @@ func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
 	drawText(screen, 2, 5, 50, 5, style, fmt.Sprintf("rot: %v", player.rot))
 }
 
+type Texture [][]tcell.Style
+
+// Colours for each parts of the wall texture
+var w1 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorYellow)
+var w2 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
+var wallTexture = Texture{
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
+}
+
+// WorldMap values to textures
+var textures = map[int]Texture{
+	1: wallTexture,
+}
+
+// TODO: make this more automagic/generated?
+// Maps x, y in world coords to x, y in wallTex coords
+//var wallTexMap = map[Point]Point{
+//	{x: 1, y: 1}: {}
+//}
+
+// Returns a map from x, y in world coords to the index of the column of the texture to use
+func generateWallTexMap(worldMap [][]int) map[Point]int {
+	textureIndices := make(map[int]int) // Maps map values (i.e. "1") to the indices for the texture for the map value
+	texMap := make(map[Point]int)
+	for y, row := range worldMap {
+		for x, mapVal := range row {
+			texForVal := textures[mapVal]
+			idx := textureIndices[mapVal] // Indexing an empty map returns 0, not nil
+			texWidth := len(texForVal[0]) // Assumes equal width all the way down the texture
+			texMap[Point{float64(x), float64(y)}] = idx % texWidth
+		}
+	}
+	return texMap
+}
+
 func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcell.Style) {
 	// Get distances
 	//dists := []int{}
 	for i, ray := range player.rays {
 		rx1 := player.x + math.Cos(ray.rot+player.rot)*float64(player.viewLen)
 		ry1 := player.y + math.Sin(ray.rot+player.rot)*float64(player.viewLen)
-		rayDist, mapVal := castRay(screen, worldMap, int(player.x), int(player.y), int(rx1), int(ry1), rayStyle)
+		rayDist, intersect := castRay(screen, worldMap, int(player.x), int(player.y), int(rx1), int(ry1), rayStyle)
 
-		// Draw bar
+		// -- Draw bar
+		// Continue if we didn't intersect anything
 		if int(rayDist) == player.viewLen {
 			continue
 		}
+		// Generate the vertical slice of texture for this bar
+		barTex := textures[worldMap[int(intersect.y)][int(intersect.x)]]
+		barTexVSlice := []tcell.Style{}
+		for _, horiz := range barTex {
+			textureColumn := wallTextureMap[*intersect]
+			barTexVSlice = append(barTexVSlice, horiz[textureColumn])
+		}
 		// Projected onto the flat view/camera plane
 		projectedRayDist := rayDist * math.Cos(ray.rot)
-		drawBar(screen, i+len(worldMap[0]), 10, 40-int(projectedRayDist), styleMap[mapVal])
+		// To push the scene view to the right of the map
+		screenXOffset := len(worldMap[0])
+		drawBar(screen, i+screenXOffset, 10, 40-int(projectedRayDist), barTexVSlice)
+		// -- end Draw bar
 
 		//dists = append(dists, int(rayDist))
 		drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
@@ -232,6 +324,13 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 	//	}
 	//	drawBar(screen, i+offset, 10, 40-dist, style)
 	//}
+}
+
+// Maps a x, y world coord to the index of a vertical slice of a texture
+var wallTextureMap map[Point]int
+
+func Init() {
+	wallTextureMap = generateWallTexMap(worldMap)
 }
 
 func main() {
