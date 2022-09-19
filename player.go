@@ -1,19 +1,57 @@
 package main
 
-import "math"
+import (
+	"math"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 type Ray struct {
 	rot float64 // Relative to player rot
 }
 
 type Player struct {
-	x    float64
-	y    float64
-	rot  float64
-	rays []*Ray
+	x        float64
+	y        float64
+	rot      float64
+	rays     []*Ray
+	rayStyle tcell.Style
 	//	rayCount    int
 	//	rayAngleGap float64
 	viewLen int
+}
+
+// TODO: single ray dist, i.e. "viewLen" or something on Player
+var player = &Player{
+	x: 2, y: 2,
+	rot: math.Pi / 2,
+	rays: []*Ray{
+		{rot: -0.55},
+		{rot: -0.5},
+		{rot: -0.45},
+		{rot: -0.4},
+		{rot: -0.35},
+		{rot: -0.3},
+		{rot: -0.25},
+		{rot: -0.2},
+		{rot: -0.15},
+		{rot: -0.1},
+		{rot: -0.05},
+		{rot: 0.0},
+		{rot: 0.05},
+		{rot: 0.1},
+		{rot: 0.15},
+		{rot: 0.2},
+		{rot: 0.25},
+		{rot: 0.3},
+		{rot: 0.35},
+		{rot: 0.4},
+		{rot: 0.45},
+		{rot: 0.5},
+		{rot: 0.55},
+	},
+	rayStyle: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
+	viewLen:  70,
 }
 
 // Moves player if possible, i.e. if there's no wall in the way
