@@ -1,4 +1,4 @@
-module github.com/nfgrep/tcell_testing
+module github.com/nfgrep/necromancer
 
 go 1.19
 

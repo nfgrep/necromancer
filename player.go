@@ -21,37 +21,40 @@ type Player struct {
 	viewLen int
 }
 
-// TODO: single ray dist, i.e. "viewLen" or something on Player
 var player = &Player{
 	x: 2, y: 2,
-	rot: math.Pi / 2,
-	rays: []*Ray{
-		{rot: -0.55},
-		{rot: -0.5},
-		{rot: -0.45},
-		{rot: -0.4},
-		{rot: -0.35},
-		{rot: -0.3},
-		{rot: -0.25},
-		{rot: -0.2},
-		{rot: -0.15},
-		{rot: -0.1},
-		{rot: -0.05},
-		{rot: 0.0},
-		{rot: 0.05},
-		{rot: 0.1},
-		{rot: 0.15},
-		{rot: 0.2},
-		{rot: 0.25},
-		{rot: 0.3},
-		{rot: 0.35},
-		{rot: 0.4},
-		{rot: 0.45},
-		{rot: 0.5},
-		{rot: 0.55},
-	},
+	rot:  math.Pi / 2,
+	rays: generateRays(24, 1.0),
+	//rays: []*Ray{
+	//	{rot: -0.55},
+	//	{rot: -0.5},
+	//	{rot: -0.45},
+	//	{rot: -0.4},
+	//	{rot: -0.35},
+	//	{rot: -0.3},
+	//	{rot: -0.25},
+	//	{rot: -0.2},
+	//	{rot: -0.15},
+	//	{rot: -0.1},
+	//	{rot: -0.05},
+	//	{rot: 0.0},
+	//	{rot: 0.05},
+	//	{rot: 0.1},
+	//	{rot: 0.15},
+	//	{rot: 0.2},
+	//	{rot: 0.25},
+	//	{rot: 0.3},
+	//	{rot: 0.35},
+	//	{rot: 0.4},
+	//	{rot: 0.45},
+	//	{rot: 0.5},
+	//	{rot: 0.55},
+	//},
 	rayStyle: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
 	viewLen:  70,
+}
+
+func Init() {
 }
 
 // Moves player if possible, i.e. if there's no wall in the way
@@ -115,8 +118,39 @@ func (p *Player) rotate(rad float64) {
 	p.rot = rotWrap(p.rot)
 }
 
-//func (p *Player) generateRays() {
-//	for i := 0; i < p.rayCount; i++ {
-//
-//	}
-//}
+func generateRays(count int, fov float64) []*Ray {
+	rays := []*Ray{}
+	rayGap := fov / float64(count)
+	halfCount := count / 2
+
+	// if even
+	if count%2 == 0 {
+		for i := -halfCount; i < count; i++ {
+			rays = append(rays, &Ray{rot: rayGap * float64(i)})
+		}
+		//// negative half of the view cone
+		//for i := halfCount; i > -2; i-- {
+		//	rayRot := rayGap * float64(i)
+		//	rays = append(rays, &Ray{rot: -rayRot})
+		//}
+
+		//centerRaysRot := rayGap / 2.0
+		////centerNegRayRot := -(centerRaysRot * float64(halfCount-1))
+		////centerPosRayRot := (centerRaysRot * float64(halfCount))
+		//rays = append(rays, &Ray{rot: -centerRaysRot * })
+		//rays = append(rays, &Ray{rot: centerRaysRot})
+
+		//// positive half of the view cone
+		//for i := 2; i <= halfCount; i++ {
+		//	rayRot := rayGap * float64(i)
+		//	rays = append(rays, &Ray{rot: rayRot})
+		//}
+	} else {
+		for i := 0; i < halfCount; i++ {
+			rayRot := rayGap * float64(i)
+			rays = append(rays, &Ray{rot: rayRot}, &Ray{rot: -rayRot})
+		}
+	}
+
+	return rays
+}
