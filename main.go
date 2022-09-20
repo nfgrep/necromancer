@@ -155,7 +155,7 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 		projectedRayDist := rayDist * math.Cos(ray.rot)
 		// To push the scene view to the right of the map
 		screenXOffset := len(worldMap[0])
-		drawBar(screen, i+screenXOffset, 10, 40-int(projectedRayDist), styleMap[worldMap[int(intersect.y)][int(intersect.x)]])
+		drawBar(screen, i+screenXOffset, 10, 50-int(projectedRayDist), styleMap[worldMap[int(intersect.y)][int(intersect.x)]])
 		// -- end Draw bar
 
 		//dists = append(dists, int(rayDist))
