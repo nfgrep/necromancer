@@ -131,11 +131,6 @@ func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
 	drawDebugText(screen, style, fmt.Sprintf("player rot: %v", player.rot))
 }
 
-var styles = map[int]tcell.Style{
-	1: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue),
-	2: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorYellow),
-}
-
 func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcell.Style) {
 	// Get distances
 	//dists := []int{}
@@ -160,7 +155,7 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 		projectedRayDist := rayDist * math.Cos(ray.rot)
 		// To push the scene view to the right of the map
 		screenXOffset := len(worldMap[0])
-		drawBar(screen, i+screenXOffset, 10, 40-int(projectedRayDist), styles[worldMap[int(intersect.y)][int(intersect.x)]])
+		drawBar(screen, i+screenXOffset, 10, 40-int(projectedRayDist), styleMap[worldMap[int(intersect.y)][int(intersect.x)]])
 		// -- end Draw bar
 
 		//dists = append(dists, int(rayDist))

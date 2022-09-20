@@ -2,7 +2,7 @@ package main
 
 import "github.com/gdamore/tcell/v2"
 
-// maps worldMap values to
+// maps worldMap values to styles
 var styleMap = map[int]tcell.Style{
 	1: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue),
 	2: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal),
