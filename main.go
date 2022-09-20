@@ -239,14 +239,12 @@ func handleInput(s tcell.Screen) {
 		} else if ev.Rune() == 'w' { // Movement
 			player.moveFwd(1, worldMap)
 		} else if ev.Rune() == 'a' {
-			player.moveLeft(1, worldMap)
+			//player.moveLeft(1, worldMap)
+			player.rotate(-0.1)
 		} else if ev.Rune() == 's' {
 			player.moveBack(1, worldMap)
 		} else if ev.Rune() == 'd' {
-			player.moveRight(1, worldMap)
-		} else if ev.Rune() == 'n' { // Rotation TODO: make arrow keys
-			player.rotate(-0.1)
-		} else if ev.Rune() == 'm' {
+			//player.moveRight(1, worldMap)
 			player.rotate(0.1)
 		}
 	}
