@@ -38,14 +38,24 @@ func setContentEqualWidth(screen tcell.Screen, x int, y int, primary rune, combi
 	screen.SetContent(x*2, y, ' ', nil, style)
 }
 
+//type Object interface {
+//worldToLocal(x, y int) (int, int)
+//}
+
+//func worldToObjectSpace(x, y int, object) (int, int) {
+//	// Get a wall from the world coords
+//
+//}
+
 // Draws a vertivcal bar centered about y
-func drawBar(s tcell.Screen, screenX, screenY, height int, style tcell.Style) {
-	//minifyTextureSlice(s, texSlice, height)
+func drawBar(s tcell.Screen, screenX, screenY, height int, tex []tcell.Style) {
 	//compressedTex := minifyTextureSlice(texSlice, height)
 	ytop := screenY - (height / 2)
 	ybot := screenY + (height / 2)
 	for y := ytop; y <= ybot; y++ {
-		setContentEqualWidth(s, screenX, y, ' ', nil, style)
+		//wallX, wallY := worldToObjectSpace(screenX, y) // y will probably be the same for world and object space
+		//u, v := projectorFunction(wall, wallX, wallY)``
+		setContentEqualWidth(s, screenX, y, ' ', nil, tex[((y+ybot)%12)])
 	}
 }
 
@@ -56,10 +66,15 @@ func intAbs(x int) int {
 	return x
 }
 
-type Point struct {
+type Vec2 struct {
 	x float64
 	y float64
-	// No z, yet...
+}
+
+type Vec3 struct {
+	x float64
+	y float64
+	z float64
 }
 
 // TODO: fucking god damnit this is messy
@@ -70,7 +85,7 @@ type Point struct {
 
 // Returns the distance, and the value of the map it intersected.
 // If no intersection, map value == 0
-func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) (float64, *Point) {
+func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) *Vec2 {
 	dx := intAbs(x1 - x0)
 	dy := -intAbs(y1 - y0)
 	sx := -1
@@ -86,16 +101,16 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 	x := x0
 	y := y0
 
-	rayLen := math.Sqrt(math.Pow(float64(x1-x0), 2) + math.Pow(float64(y1-y0), 2))
-	dist := rayLen
-	intersectionPoint := &Point{}
+	//rayLen := math.Sqrt(math.Pow(float64(x1-x0), 2) + math.Pow(float64(y1-y0), 2))
+	//dist := rayLen
+	intersectionPoint := &Vec2{}
 	for {
 		setContentEqualWidth(screen, x, y, ' ', nil, style)
 
 		// Get dists for drawing 3D scene
 		if worldMap[y][x] != 0 {
-			dist = math.Sqrt(math.Pow(float64(x-x0), 2) + math.Pow(float64(y-y0), 2))
-			intersectionPoint = &Point{float64(x), float64(y)}
+			//dist = math.Sqrt(math.Pow(float64(x-x0), 2) + math.Pow(float64(y-y0), 2))
+			intersectionPoint = &Vec2{float64(x), float64(y)}
 			break
 		}
 
@@ -120,7 +135,7 @@ func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tc
 			y = y + sy
 		}
 	}
-	return dist, intersectionPoint
+	return intersectionPoint
 }
 
 func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
@@ -131,45 +146,54 @@ func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
 	drawDebugText(screen, style, fmt.Sprintf("player rot: %v", player.rot))
 }
 
+var maxWallHeight int = 50
+var horizonYPos int = 15
+
 func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcell.Style) {
 	// Get distances
 	//dists := []int{}
 	for i, ray := range player.rays {
 		rx1 := player.x + math.Cos(ray.rot+player.rot)*float64(player.viewLen)
 		ry1 := player.y + math.Sin(ray.rot+player.rot)*float64(player.viewLen)
-		rayDist, intersect := castRay(screen, worldMap, int(player.x), int(player.y), int(rx1), int(ry1), player.rayStyle)
+		intersect := castRay(screen, worldMap, int(player.x), int(player.y), int(rx1), int(ry1), player.rayStyle)
+		rayDist := math.Sqrt(math.Pow(float64(player.x-intersect.x), 2) + math.Pow(float64(player.y-intersect.y), 2))
 
 		// -- Draw bar
 		// Continue if we didn't intersect anything
 		if int(rayDist) == player.viewLen {
 			continue
 		}
+		// Projected onto the flat view/camera plane
+		// Minimizes fish-eye effect a bit
+		correctedRayDist := rayDist * math.Cos(ray.rot)
+		barHeight := maxWallHeight - int(correctedRayDist)
+
 		// Generate the vertical slice of texture for this bar
 		//barTex := textures[worldMap[int(intersect.y)][int(intersect.x)]]
-		//barTexVSlice := []tcell.Style{}
-		//for _, horiz := range barTex {
-		//	textureColumn := wallTextureMap[*intersect]
-		//	barTexVSlice = append(barTexVSlice, horiz[textureColumn])
-		//}
-		// Projected onto the flat view/camera plane
-		projectedRayDist := rayDist * math.Cos(ray.rot)
+		barTex := wallTexture
+		barTexVSlice := []tcell.Style{}
+		for _, horiz := range barTex {
+			//textureColumn := wallTextureMap[*intersect]
+			barTexVSlice = append(barTexVSlice, horiz[int(intersect.x)%12])
+		}
+
+		// Project texVslice onto the height of a wall
+		projectedTexVSlice := []tcell.Style{}
+		texelsPerPixel := len(barTexVSlice) / barHeight
+		for j := 0; j < len(barTexVSlice); j++ {
+			projectedTexVSlice = append(projectedTexVSlice, barTexVSlice[(j*texelsPerPixel)%len(barTexVSlice)])
+		}
+
 		// To push the scene view to the right of the map
 		screenXOffset := len(worldMap[0])
-		drawBar(screen, i+screenXOffset, 10, 50-int(projectedRayDist), styleMap[worldMap[int(intersect.y)][int(intersect.x)]])
+		//barStyle := styleMap[worldMap[int(intersect.y)][int(intersect.x)]]
+		drawBar(screen, i+screenXOffset, horizonYPos, barHeight, projectedTexVSlice)
 		// -- end Draw bar
 
 		//dists = append(dists, int(rayDist))
 		//drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
 	}
 
-	// Draw bar for each distance
-	//offset := len(worldMap[0]) // So that we render off to the right of the map, *2 because we're using double width
-	//for i, dist := range dists {
-	//	if dist == player.viewLen {
-	//		continue
-	//	}
-	//	drawBar(screen, i+offset, 10, 40-dist, style)
-	//}
 }
 
 // Maps a x, y world coord to the index of a vertical slice of a texture

@@ -1,42 +1,80 @@
 package main
 
-//type Texture [][]tcell.Style
+import "github.com/gdamore/tcell/v2"
+
+type Texture [][]tcell.Style
 
 // Colours for each parts of the wall texture
-//var w1 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorYellow)
-//var w2 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
-//var wallTexture = Texture{
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//	{w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2},
-//	{w2, w1, w2, w1, w2, w1, w2, w1, w2, w1, w2, w1},
-//}
+var c1 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorYellow)
+var c2 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
+var c3 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
+var checkerTexture = Texture{
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+	{c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c3},
+	{c2, c1, c2, c1, c2, c1, c2, c1, c2, c1, c2, c1},
+}
+
+var w1 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
+var w2 = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorGreen)
+var wallTexture = Texture{
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w1, w1, w1},
+	{c1, c1, c1, c1, c1, c1, w1, w1, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+	{w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1, w2},
+	{w2, w2, w2, w2, w2, w2, w2, w1, w2, w1, w2, w1},
+}
 
 // WorldMap values to textures
 //var textures = map[int]Texture{
