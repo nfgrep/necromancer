@@ -176,9 +176,9 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 			continue
 		}
 
-		tex := smallTexture
-		texX := int(intersect.x) % len(tex)
-		texSlice := getTexSlice(smallTexture, texX)
+		tex := wallTexture
+		texX := int(intersect.x) % len(tex[0])
+		texSlice := getTexSlice(wallTexture, texX)
 		filteredTexSlice := filterTexSlice(texSlice, barHeight)
 		// To push the scene view to the right of the map
 		screenXOffset := len(worldMap[0])
