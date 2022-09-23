@@ -176,8 +176,23 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 			continue
 		}
 
+		worldRayRot := player.rot + ray.rot
+
+		var texXF float64
+		if worldRayRot > (math.Pi/2) && worldRayRot < (math.Pi+(math.Pi/2)) {
+			texXF = intersect.y
+		} else {
+			texXF = intersect.x
+		}
+
 		tex := wallTexture
-		texX := int(intersect.x) % len(tex[0])
+
+		if worldRayRot > math.Pi {
+			texXF = float64(len(worldMap[0])) - texXF
+		}
+
+		texX := int(texXF) % len(tex[0])
+
 		texSlice := getTexSlice(wallTexture, texX)
 		filteredTexSlice := filterTexSlice(texSlice, barHeight)
 		// To push the scene view to the right of the map

@@ -23,7 +23,7 @@ type Player struct {
 
 var player = &Player{
 	x: 2, y: 2,
-	rot:      math.Pi / 2,
+	rot:      0.0,
 	rays:     generateRays(30, 1.0),
 	rayStyle: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
 	viewLen:  70,
