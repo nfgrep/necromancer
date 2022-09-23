@@ -48,14 +48,19 @@ func setContentEqualWidth(screen tcell.Screen, x int, y int, primary rune, combi
 //}
 
 // Draws a vertivcal bar centered about y
-func drawBar(s tcell.Screen, screenX, screenY, height int, tex []tcell.Style) {
+func drawBar(s tcell.Screen, screenX, screenY, height int, texSlice []tcell.Style) {
 	//compressedTex := minifyTextureSlice(texSlice, height)
+	//ytop := screenY - (height / 2)
+	//ybot := screenY + (height / 2)
+	//for y := ytop; y <= ybot; y++ {
+	//	//wallX, wallY := worldToObjectSpace(screenX, y) // y will probably be the same for world and object space
+	//	//u, v := projectorFunction(wall, wallX, wallY)``
+	//	setContentEqualWidth(s, screenX, y, ' ', nil, tex[(y+ybot)])
+	//}
 	ytop := screenY - (height / 2)
-	ybot := screenY + (height / 2)
-	for y := ytop; y <= ybot; y++ {
-		//wallX, wallY := worldToObjectSpace(screenX, y) // y will probably be the same for world and object space
-		//u, v := projectorFunction(wall, wallX, wallY)``
-		setContentEqualWidth(s, screenX, y, ' ', nil, tex[((y+ybot)%12)])
+	for i, style := range texSlice { // Assuming len(texSlice) == height
+		y := i + ytop
+		setContentEqualWidth(s, screenX, y, ' ', nil, style)
 	}
 }
 
@@ -167,33 +172,47 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 		// Minimizes fish-eye effect a bit
 		correctedRayDist := rayDist * math.Cos(ray.rot)
 		barHeight := maxWallHeight - int(correctedRayDist)
-
-		// Generate the vertical slice of texture for this bar
-		//barTex := textures[worldMap[int(intersect.y)][int(intersect.x)]]
-		barTex := wallTexture
-		barTexVSlice := []tcell.Style{}
-		for _, horiz := range barTex {
-			//textureColumn := wallTextureMap[*intersect]
-			barTexVSlice = append(barTexVSlice, horiz[int(intersect.x)%12])
+		if barHeight == 0 {
+			continue
 		}
 
-		// Project texVslice onto the height of a wall
-		projectedTexVSlice := []tcell.Style{}
-		texelsPerPixel := len(barTexVSlice) / barHeight
-		for j := 0; j < len(barTexVSlice); j++ {
-			projectedTexVSlice = append(projectedTexVSlice, barTexVSlice[(j*texelsPerPixel)%len(barTexVSlice)])
-		}
-
+		tex := smallTexture
+		texX := int(intersect.x) % len(tex)
+		texSlice := getTexSlice(smallTexture, texX)
+		filteredTexSlice := filterTexSlice(texSlice, barHeight)
 		// To push the scene view to the right of the map
 		screenXOffset := len(worldMap[0])
 		//barStyle := styleMap[worldMap[int(intersect.y)][int(intersect.x)]]
-		drawBar(screen, i+screenXOffset, horizonYPos, barHeight, projectedTexVSlice)
+		drawBar(screen, i+screenXOffset, horizonYPos, barHeight, filteredTexSlice)
 		// -- end Draw bar
 
 		//dists = append(dists, int(rayDist))
 		//drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
 	}
 
+}
+
+func getTexSlice(tex Texture, texX int) []tcell.Style {
+	// Generate the vertical slice of texture for this bar
+	//barTex := textures[worldMap[int(intersect.y)][int(intersect.x)]]
+	texSlice := []tcell.Style{}
+	for _, horiz := range tex {
+		//textureColumn := wallTextureMap[*intersect]
+		texSlice = append(texSlice, horiz[texX])
+	}
+	return texSlice
+}
+
+func filterTexSlice(texSlice []tcell.Style, height int) []tcell.Style {
+	// Project texVslice onto the height of a wall
+	projectedTexVSlice := []tcell.Style{}
+	texelsPerPixel := float64(len(texSlice)) / float64(height)
+	j := texelsPerPixel
+	for j < float64(len(texSlice)) {
+		projectedTexVSlice = append(projectedTexVSlice, texSlice[(int(j))])
+		j += texelsPerPixel
+	}
+	return projectedTexVSlice
 }
 
 // Maps a x, y world coord to the index of a vertical slice of a texture
@@ -263,13 +282,15 @@ func handleInput(s tcell.Screen) {
 		} else if ev.Rune() == 'w' { // Movement
 			player.moveFwd(1, worldMap)
 		} else if ev.Rune() == 'a' {
-			//player.moveLeft(1, worldMap)
 			player.rotate(-0.1)
 		} else if ev.Rune() == 's' {
 			player.moveBack(1, worldMap)
 		} else if ev.Rune() == 'd' {
-			//player.moveRight(1, worldMap)
 			player.rotate(0.1)
+		} else if ev.Rune() == 'n' {
+			player.moveLeft(1, worldMap)
+		} else if ev.Rune() == 'm' {
+			player.moveRight(1, worldMap)
 		}
 	}
 }
