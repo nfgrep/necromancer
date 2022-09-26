@@ -28,9 +28,10 @@ func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string
 // This is the current height of the map
 var debugTextY int = 30
 var debugTextWidth int = 200
+var debugStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
 
-func drawDebugText(s tcell.Screen, style tcell.Style, text string) {
-	drawText(s, 0, debugTextY, debugTextWidth, debugTextY+5, style, text)
+func drawDebugText(s tcell.Screen, text string) {
+	drawText(s, 0, debugTextY, debugTextWidth, debugTextY+5, debugStyle, text)
 }
 
 func setContentEqualWidth(screen tcell.Screen, x int, y int, primary rune, combining []rune, style tcell.Style) {
@@ -148,7 +149,7 @@ func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
 	setContentEqualWidth(screen, int(player.x), int(player.y), ' ', nil, style)
 
 	// Some debug
-	drawDebugText(screen, style, fmt.Sprintf("player rot: %v", player.rot))
+	drawDebugText(screen, fmt.Sprintf("player rot: %v", player.rot))
 }
 
 var maxWallHeight int = 50
@@ -176,20 +177,29 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 			continue
 		}
 
-		worldRayRot := player.rot + ray.rot
-
 		var texXF float64
-		if worldRayRot > (math.Pi/2) && worldRayRot < (math.Pi+(math.Pi/2)) {
+		displacementRayX := math.Abs(intersect.x - player.x)
+		displacementRayY := math.Abs(intersect.y - player.y)
+		if displacementRayX > displacementRayY {
 			texXF = intersect.y
 		} else {
 			texXF = intersect.x
 		}
 
-		tex := wallTexture
+		//worldRayRot := player.rot + ray.rot
 
-		if worldRayRot > math.Pi {
-			texXF = float64(len(worldMap[0])) - texXF
-		}
+		//if worldRayRot > math.Pi {
+		//	texXF = float64(len(worldMap[0])) - texXF
+		//}
+
+		//drawDebugText(screen, fmt.Sprintf("dispRayX"))
+		//if worldRayRot > (math.Pi/2) && worldRayRot < (math.Pi+(math.Pi/2)) {
+		//	texXF = intersect.y
+		//} else {
+		//	texXF = intersect.x
+		//}
+
+		tex := wallTexture
 
 		texX := int(texXF) % len(tex[0])
 
