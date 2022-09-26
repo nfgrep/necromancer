@@ -177,20 +177,22 @@ func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcel
 			continue
 		}
 
+		worldRayRot := player.rot + ray.rot
+
 		var texXF float64
 		displacementRayX := math.Abs(intersect.x - player.x)
 		displacementRayY := math.Abs(intersect.y - player.y)
 		if displacementRayX > displacementRayY {
 			texXF = intersect.y
+			if !(worldRayRot < (3*math.Pi)/2 && worldRayRot > math.Pi/2) {
+				texXF = float64(len(worldMap[0])) - texXF
+			}
 		} else {
 			texXF = intersect.x
+			if worldRayRot > math.Pi {
+				texXF = float64(len(worldMap[0])) - texXF
+			}
 		}
-
-		//worldRayRot := player.rot + ray.rot
-
-		//if worldRayRot > math.Pi {
-		//	texXF = float64(len(worldMap[0])) - texXF
-		//}
 
 		//drawDebugText(screen, fmt.Sprintf("dispRayX"))
 		//if worldRayRot > (math.Pi/2) && worldRayRot < (math.Pi+(math.Pi/2)) {
