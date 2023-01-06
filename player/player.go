@@ -11,7 +11,8 @@ import (
 
 type Player struct {
 	Position *linalg.Vec2
-	Fwd      *linalg.Vec2
+	// Fwd      *linalg.Vec2
+	Rotation *float64
 	ViewRays []*ViewRay
 	//	rayCount    int
 	//	rayAngleGap float64
@@ -71,31 +72,65 @@ func (p *Player) move(dx, dy float64, worldMap world.Map) {
 }
 
 func (p *Player) MoveFwd(dist float64, worldMap world.Map) {
-	dx := p.Fwd.X * dist
-	dy := p.Fwd.Y * dist
-	p.move(dx, dy, worldMap)
+	// dx := p.Fwd.X * dist
+	// dy := p.Fwd.Y * dist
+
+	// Get the forward vector and multiply by the distance
+	fwdVec := p.ForwardVec().Mul(dist)
+	// Move the player
+	p.move(fwdVec.X, fwdVec.Y, worldMap)
+	// p.move(dx, dy, worldMap)
 }
 
 func (p *Player) MoveLeft(dist float64, worldMap world.Map) {
-	// Get the left-vector
-	// Flip the x and y, and negate the x
-	dx := p.Fwd.Y * dist
-	dy := -p.Fwd.X * dist
-	p.move(dx, dy, worldMap)
+	// // Get the left-vector
+	// // Flip the x and y, and negate the x
+	// dx := p.Fwd.Y * dist
+	// dy := -p.Fwd.X * dist
+	// p.move(dx, dy, worldMap)
+
+	// Get the right vector, negate it to get left vector, and multiply by the distance
+	leftVec := p.RightVec().Mul(-dist)
+	// Move the player
+	p.move(leftVec.X, leftVec.Y, worldMap)
 }
 
 func (p *Player) MoveRight(dist float64, worldMap world.Map) {
-	// Get the right-vector
-	// Flip the x and y, and negate the y
-	dx := -p.Fwd.Y * dist
-	dy := p.Fwd.X * dist
-	p.move(dx, dy, worldMap)
+	// // Get the right-vector
+	// // Flip the x and y, and negate the y
+	// dx := -p.Fwd.Y * dist
+	// dy := p.Fwd.X * dist
+
+	// Get the right vector and multiply by the distance
+	rightVec := p.RightVec().Mul(dist)
+	// Move the player
+	p.move(rightVec.X, rightVec.Y, worldMap)
+	//p.move(dx, dy, worldMap)
 }
 
 func (p *Player) MoveBack(dist float64, worldMap world.Map) {
-	dx := -p.Fwd.X * dist
-	dy := -p.Fwd.Y * dist
-	p.move(dx, dy, worldMap)
+	// dx := -p.Fwd.X * dist
+	// dy := -p.Fwd.Y * dist
+
+	// Get the forward vector, negate it to get back vector, and multiply by the distance
+	backVec := p.ForwardVec().Mul(-dist)
+	// Move the player
+	p.move(backVec.X, backVec.Y, worldMap)
+	// p.move(dx, dy, worldMap)
+}
+
+func (p *Player) RightVec() *linalg.Vec2 {
+	// Subtract pi/2 (90 degrees) from the rotation
+	rightRot := rotWrap(*p.Rotation - (math.Pi / 2))
+	// Get the right vector, make sure it's normalized
+	rightVec := linalg.Vec2FromAngle(rightRot).Normalized()
+	return rightVec
+}
+
+func (p *Player) ForwardVec() *linalg.Vec2 {
+	// Get the forward vector, make sure it's normalized
+	forwardVec := linalg.Vec2FromAngle(*p.Rotation).Normalized()
+	return forwardVec
 }
 
 // Takes rot in radians, returns the value between 0, 2pi
@@ -111,20 +146,27 @@ func rotWrap(rot float64) float64 {
 }
 
 func (p *Player) Rotate(rad float64) {
-	// Get existing rotation from fwd vector
-	currRot := p.Fwd.Angle()
+	// // Get existing rotation from fwd vector
+	// currRot := p.Fwd.Angle()
+	// // Add the rotation
+	// newRot := currRot + rad
+	// // Make sure to wrap it
+	// rot := rotWrap(newRot)
+	// // Set our new fwd vector
+	// newFwd := linalg.Vec2FromAngle(rot).Normalized()
+	// p.Fwd.X = newFwd.X
+	// p.Fwd.Y = newFwd.Y
+
 	// Add the rotation
-	newRot := currRot + rad
+	newRot := *p.Rotation + rad
 	// Make sure to wrap it
 	rot := rotWrap(newRot)
-	// Set our new fwd vector
-	newFwd := linalg.Vec2FromAngle(rot).Normalized()
-	p.Fwd.X = newFwd.X
-	p.Fwd.Y = newFwd.Y
+	// Set our new rotation
+	*p.Rotation = rot // TODO: this feels icky, is it?
 }
 
 // TODO: take in basis ray
-func GenerateRays(count int, fov float64, origin *linalg.Vec2, fwd *linalg.Vec2) []*ViewRay {
+func GenerateRays(count int, fov float64, origin *linalg.Vec2, playerRot *float64) []*ViewRay {
 	rays := []*ViewRay{}
 	rayGap := fov / float64(count)
 	halfCount := count / 2
@@ -133,17 +175,38 @@ func GenerateRays(count int, fov float64, origin *linalg.Vec2, fwd *linalg.Vec2)
 	if count%2 == 0 {
 		for i := -halfCount; i < count; i++ {
 			rayRot := rayGap * float64(i)
-			ray := &gfx.Ray{Origin: origin, Direction: fwd}                      // This one changes dynamically
-			viewRay := &ViewRay{Ray: ray, offset: *linalg.Vec2FromAngle(rayRot)} // This one stores a ref to former and a static offset
+			// ray := &gfx.Ray{Origin: origin, Direction: fwd}                      // This one changes dynamically
+			// viewRay := &ViewRay{Ray: ray, offset: *linalg.Vec2FromAngle(rayRot)} // This one stores a ref to former and a static offset
+			viewRay := &ViewRay{
+				Ray: &gfx.Ray{
+					Origin:   origin,
+					Rotation: playerRot,
+				},
+				offsetAngle: rayRot,
+			}
 			rays = append(rays, viewRay)
 		}
 	} else {
 		for i := 0; i < halfCount; i++ {
 			rayRot := rayGap * float64(i)
-			posRay := &gfx.Ray{Origin: origin, Direction: fwd}
-			posViewRay := &ViewRay{Ray: posRay, offset: *linalg.Vec2FromAngle(rayRot)}
-			negRay := &gfx.Ray{Origin: origin, Direction: fwd}
-			negViewRay := &ViewRay{Ray: negRay, offset: *linalg.Vec2FromAngle(-rayRot)}
+			// posRay := &gfx.Ray{Origin: origin, Direction: fwd}
+			// posViewRay := &ViewRay{Ray: posRay, offset: *linalg.Vec2FromAngle(rayRot)}
+			// negRay := &gfx.Ray{Origin: origin, Direction: fwd}
+			// negViewRay := &ViewRay{Ray: negRay, offset: *linalg.Vec2FromAngle(-rayRot)}
+			posViewRay := &ViewRay{
+				Ray: &gfx.Ray{
+					Origin:   origin,
+					Rotation: playerRot,
+				},
+				offsetAngle: rayRot,
+			}
+			negViewRay := &ViewRay{
+				Ray: &gfx.Ray{
+					Origin:   origin,
+					Rotation: playerRot,
+				},
+				offsetAngle: -rayRot,
+			}
 			rays = append(rays, posViewRay, negViewRay)
 		}
 	}

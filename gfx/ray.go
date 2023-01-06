@@ -8,11 +8,10 @@ import (
 )
 
 type Ray struct {
-	Origin    *linalg.Vec2
-	Direction *linalg.Vec2 // TODO: should be pointer? Currently being used to just duplicate the fwd vec, so yes for now
+	Origin   *linalg.Vec2
+	Rotation *float64
 }
 
-// Combines ray direction with offset direction before casting
 func (r *Ray) Cast(dist float64, intersects func(x, y float64) bool, rayIdx int) *linalg.Vec2 {
 	rayTip := r.Tip(dist)
 	x0 := r.Origin.X
@@ -24,10 +23,11 @@ func (r *Ray) Cast(dist float64, intersects func(x, y float64) bool, rayIdx int)
 }
 
 func (r *Ray) Tip(length float64) *linalg.Vec2 {
-	return &linalg.Vec2{
-		X: r.Origin.X + (r.Direction.X * length),
-		Y: r.Origin.Y + (r.Direction.Y * length),
-	}
+	return linalg.Vec2FromAngle(*r.Rotation).Mul(length).Add(*r.Origin)
+	// return &linalg.Vec2{
+	// 	X: r.Origin.X + (r.Direction.X * length),
+	// 	Y: r.Origin.Y + (r.Direction.Y * length),
+	// }
 }
 
 func castRay(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, rayIdx int) *linalg.Vec2 {

@@ -136,14 +136,16 @@ func main() {
 	gfx.SetDebugScreen(s)
 
 	var playerPos = linalg.Vec2{X: 2, Y: 2}
-	var playerFwd = linalg.Vec2{X: 0, Y: 0}
+	//var playerFwd = linalg.Vec2{X: 0, Y: 0}
+	var playerRot = 0.0
 	var rayCount = 40
 	var fov = 0.72
 
 	var p = &player.Player{
 		Position: &playerPos,
-		Fwd:      &playerFwd,
-		ViewRays: player.GenerateRays(rayCount, fov, &playerPos, &playerFwd),
+		// Fwd:      &playerFwd,
+		Rotation: &playerRot,
+		ViewRays: player.GenerateRays(rayCount, fov, &playerPos, &playerRot),
 		// rayStyle: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
 		ViewLen: 70,
 	}
