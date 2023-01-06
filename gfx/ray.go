@@ -1,7 +1,6 @@
 package gfx
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/nfgrep/necromancer/linalg"
@@ -18,7 +17,7 @@ func (r *Ray) Cast(dist float64, intersects func(x, y float64) bool, rayIdx int)
 	x1 := rayTip.X
 	y0 := r.Origin.Y
 	y1 := rayTip.Y
-	DrawDebugText(rayIdx, fmt.Sprintf("ray: %v, x0: %v, y0: %v, x1: %v, y1: %v", rayIdx, x0, y0, x1, y1))
+	//DrawDebugText(rayIdx, fmt.Sprintf("ray: %v, x0: %v, y0: %v, x1: %v, y1: %v", rayIdx, x0, y0, x1, y1))
 	return castRay(x0, y0, x1, y1, intersects, rayIdx)
 }
 

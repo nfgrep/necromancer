@@ -95,8 +95,8 @@ func DrawBarWithColor(s tcell.Screen, screenPosX, screenPosY, height int, style 
 }
 
 func SetContentEqualWidth(screen tcell.Screen, x int, y int, primary rune, combining []rune, style tcell.Style) {
-	screen.SetContent((x*2)+1, y, ' ', nil, style)
-	screen.SetContent(x*2, y, ' ', nil, style)
+	screen.SetContent((x*2)+1, y, primary, combining, style)
+	screen.SetContent(x*2, y, primary, combining, style)
 }
 
 func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {

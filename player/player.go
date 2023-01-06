@@ -42,11 +42,12 @@ func (p *Player) CastViewRays(worldMap world.Map, screen tcell.Screen, rayStyle 
 		// Define a function that runs on each iteration of the raycast, and checks if we've hit a wall
 		intersects := func(x, y float64) bool {
 			//gfx.DrawDebugText(i, fmt.Sprintf("ray: %v, x: %v, y: %v", i, x, y))
-			gfx.SetContentEqualWidth(screen, int(x), int(y), ' ', nil, rayStyle) // Draw the ray
 			// Ignore negative and out-of-bounds values
+			gfx.SetContentEqualWidth(screen, int(x), int(y), ' ', nil, rayStyle) // Draw the ray
 			if x < 0 || y < 0 || x > float64(worldMap.Width()) || y > float64(worldMap.Height()) {
 				return false
 			}
+
 			return worldMap.WallExistsAt(x, y)
 		}
 
@@ -65,7 +66,7 @@ func (p *Player) CastViewRays(worldMap world.Map, screen tcell.Screen, rayStyle 
 func (p *Player) move(dx, dy float64, worldMap world.Map) {
 	newX := p.Position.X + dx
 	newY := p.Position.Y + dy
-	if worldMap.WallExistsAt(newX, newY) {
+	if !worldMap.WallExistsAt(newX, newY) {
 		p.Position.X = newX
 		p.Position.Y = newY
 	}
@@ -121,7 +122,7 @@ func (p *Player) MoveBack(dist float64, worldMap world.Map) {
 
 func (p *Player) RightVec() *linalg.Vec2 {
 	// Subtract pi/2 (90 degrees) from the rotation
-	rightRot := rotWrap(*p.Rotation - (math.Pi / 2))
+	rightRot := rotWrap(*p.Rotation + (math.Pi / 2))
 	// Get the right vector, make sure it's normalized
 	rightVec := linalg.Vec2FromAngle(rightRot).Normalized()
 	return rightVec
