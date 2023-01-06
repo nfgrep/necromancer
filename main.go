@@ -1,259 +1,120 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"math"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/nfgrep/necromancer/gfx"
+	"github.com/nfgrep/necromancer/linalg"
+	"github.com/nfgrep/necromancer/player"
+	"github.com/nfgrep/necromancer/world"
 )
 
-func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {
-	row := y1
-	col := x1
-	for _, r := range text {
-		s.SetContent(col, row, r, nil, style)
-		col++
-		if col >= x2 {
-			row++
-			col = x1
-		}
-		if row > y2 {
-			break
-		}
-	}
+// maps world.WorldMap values to styles
+var styleMap = map[int]tcell.Style{
+	1: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue),
+	2: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal),
 }
 
-// This is the current height of the map
-var debugTextY int = 30
-var debugTextWidth int = 200
-var debugStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
-
-func drawDebugText(s tcell.Screen, text string) {
-	drawText(s, 0, debugTextY, debugTextWidth, debugTextY+5, debugStyle, text)
-}
-
-func setContentEqualWidth(screen tcell.Screen, x int, y int, primary rune, combining []rune, style tcell.Style) {
-	screen.SetContent((x*2)+1, y, ' ', nil, style)
-	screen.SetContent(x*2, y, ' ', nil, style)
-}
-
-//type Object interface {
-//worldToLocal(x, y int) (int, int)
-//}
-
-//func worldToObjectSpace(x, y int, object) (int, int) {
-//	// Get a wall from the world coords
-//
-//}
-
-// Draws a vertivcal bar centered about y
-func drawBar(s tcell.Screen, screenX, screenY, height int, texSlice []tcell.Style) {
-	//compressedTex := minifyTextureSlice(texSlice, height)
-	//ytop := screenY - (height / 2)
-	//ybot := screenY + (height / 2)
-	//for y := ytop; y <= ybot; y++ {
-	//	//wallX, wallY := worldToObjectSpace(screenX, y) // y will probably be the same for world and object space
-	//	//u, v := projectorFunction(wall, wallX, wallY)``
-	//	setContentEqualWidth(s, screenX, y, ' ', nil, tex[(y+ybot)])
-	//}
-	ytop := screenY - (height / 2)
-	for i, style := range texSlice { // Assuming len(texSlice) == height
-		y := i + ytop
-		setContentEqualWidth(s, screenX, y, ' ', nil, style)
-	}
-}
-
-func intAbs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
-type Vec2 struct {
-	x float64
-	y float64
-}
-
-type Vec3 struct {
-	x float64
-	y float64
-	z float64
-}
-
-// TODO: fucking god damnit this is messy
-
-// Some fancy version of bresenhams
-// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-// http://members.chello.at/~easyfilter/Bresenham.pdf
-
-// Returns the distance, and the value of the map it intersected.
-// If no intersection, map value == 0
-func castRay(screen tcell.Screen, worldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) *Vec2 {
-	dx := intAbs(x1 - x0)
-	dy := -intAbs(y1 - y0)
-	sx := -1
-	if x0 < x1 {
-		sx = 1
-	}
-	sy := -1
-	if y0 < y1 {
-		sy = 1
-	}
-	er := dx + dy
-
-	x := x0
-	y := y0
-
-	//rayLen := math.Sqrt(math.Pow(float64(x1-x0), 2) + math.Pow(float64(y1-y0), 2))
-	//dist := rayLen
-	intersectionPoint := &Vec2{}
-	for {
-		setContentEqualWidth(screen, x, y, ' ', nil, style)
-
-		// Get dists for drawing 3D scene
-		if worldMap[y][x] != 0 {
-			//dist = math.Sqrt(math.Pow(float64(x-x0), 2) + math.Pow(float64(y-y0), 2))
-			intersectionPoint = &Vec2{float64(x), float64(y)}
-			break
-		}
-
-		if x == x1 && y == y1 {
-			break
-		}
-
-		e2 := 2 * er
-		if e2 >= dy {
-			if x == x1 {
-				break
-			}
-			er = er + dy
-			x = x + sx
-		}
-
-		if e2 <= dx {
-			if y == y1 {
-				break
-			}
-			er = er + dx
-			y = y + sy
-		}
-	}
-	return intersectionPoint
-}
-
-func drawPlayer(screen tcell.Screen, player *Player, style tcell.Style) {
-	// Draw the player
-	setContentEqualWidth(screen, int(player.x), int(player.y), ' ', nil, style)
-
-	// Some debug
-	drawDebugText(screen, fmt.Sprintf("player rot: %v", player.rot))
-}
+// // Draws a vertivcal bar centered about y
+// func drawBarWithTex(s tcell.Screen, screenX, screenY, height int, texSlice []tcell.Style) {
+// 	//compressedTex := minifyTextureSlice(texSlice, height)
+// 	//ytop := screenY - (height / 2)
+// 	//ybot := screenY + (height / 2)
+// 	//for y := ytop; y <= ybot; y++ {
+// 	//	//wallX, wallY := worldToObjectSpace(screenX, y) // y will probably be the same for world and object space
+// 	//	//u, v := projectorFunction(wall, wallX, wallY)``
+// 	//	setContentEqualWidth(s, screenX, y, ' ', nil, tex[(y+ybot)])
+// 	//}
+// 	ytop := screenY - (height / 2)
+// 	for i, style := range texSlice { // Assuming len(texSlice) == height
+// 		y := i + ytop
+// 		setContentEqualWidth(s, screenX, y, ' ', nil, style)
+// 	}
+// }
 
 var maxWallHeight int = 50
 var horizonYPos int = 15
 
-func drawScene(screen tcell.Screen, player *Player, worldMap [][]int, style tcell.Style) {
-	// Get distances
-	//dists := []int{}
-	for i, ray := range player.rays {
-		rx1 := player.x + math.Cos(ray.rot+player.rot)*float64(player.viewLen)
-		ry1 := player.y + math.Sin(ray.rot+player.rot)*float64(player.viewLen)
-		intersect := castRay(screen, worldMap, int(player.x), int(player.y), int(rx1), int(ry1), player.rayStyle)
-		rayDist := math.Sqrt(math.Pow(float64(player.x-intersect.x), 2) + math.Pow(float64(player.y-intersect.y), 2))
-
-		// -- Draw bar
-		// Continue if we didn't intersect anything
-		if int(rayDist) == player.viewLen {
-			continue
-		}
-		// Projected onto the flat view/camera plane
-		// Minimizes fish-eye effect a bit
-		correctedRayDist := rayDist * math.Cos(ray.rot)
-		barHeight := maxWallHeight - int(correctedRayDist)
-		if barHeight == 0 {
-			continue
-		}
-
-		worldRayRot := player.rot + ray.rot
-
-		var texXF float64
-		displacementRayX := math.Abs(intersect.x - player.x)
-		displacementRayY := math.Abs(intersect.y - player.y)
-		if displacementRayX > displacementRayY {
-			texXF = intersect.y
-			if !(worldRayRot < (3*math.Pi)/2 && worldRayRot > math.Pi/2) {
-				texXF = float64(len(worldMap[0])) - texXF
-			}
-		} else {
-			texXF = intersect.x
-			if worldRayRot > math.Pi {
-				texXF = float64(len(worldMap[0])) - texXF
-			}
-		}
-
-		//drawDebugText(screen, fmt.Sprintf("dispRayX"))
-		//if worldRayRot > (math.Pi/2) && worldRayRot < (math.Pi+(math.Pi/2)) {
-		//	texXF = intersect.y
-		//} else {
-		//	texXF = intersect.x
-		//}
-
-		tex := wallTexture
-
-		texX := int(texXF) % len(tex[0])
-
-		texSlice := getTexSlice(wallTexture, texX)
-		filteredTexSlice := filterTexSlice(texSlice, barHeight)
-		// To push the scene view to the right of the map
-		screenXOffset := len(worldMap[0])
-		//barStyle := styleMap[worldMap[int(intersect.y)][int(intersect.x)]]
-		drawBar(screen, i+screenXOffset, horizonYPos, barHeight, filteredTexSlice)
-		// -- end Draw bar
-
-		//dists = append(dists, int(rayDist))
-		//drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
-	}
-
+// TODO: make a 'scene' package?
+func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, style tcell.Style) {
+	dists := player.CastViewRays(worldMap, screen, style)
+	// TODO: make these constants?
+	maxHeight := 50
+	horizonYPos := 20
+	gfx.DrawBarsForDists(screen, dists, player.ViewLen, maxHeight, horizonYPos, worldMap.Width(), style)
 }
 
-func getTexSlice(tex Texture, texX int) []tcell.Style {
-	// Generate the vertical slice of texture for this bar
-	//barTex := textures[worldMap[int(intersect.y)][int(intersect.x)]]
-	texSlice := []tcell.Style{}
-	for _, horiz := range tex {
-		//textureColumn := wallTextureMap[*intersect]
-		texSlice = append(texSlice, horiz[texX])
-	}
-	return texSlice
+// func getTexSlice(tex gfx.Texture, texX int) []tcell.Style {
+// 	// Generate the vertical slice of texture for this bar
+// 	//barTex := textures[world.WorldMap[int(intersect.y)][int(intersect.x)]]
+// 	texSlice := []tcell.Style{}
+// 	for _, horiz := range tex {
+// 		//textureColumn := wallTextureMap[*intersect]
+// 		texSlice = append(texSlice, horiz[texX])
+// 	}
+// 	return texSlice
+// }
+
+// func filterTexSlice(texSlice []tcell.Style, height int) []tcell.Style {
+// 	// Project texVslice onto the height of a wall
+// 	projectedTexVSlice := []tcell.Style{}
+// 	texelsPerPixel := float64(len(texSlice)) / float64(height)
+// 	j := texelsPerPixel
+// 	for j < float64(len(texSlice)) {
+// 		projectedTexVSlice = append(projectedTexVSlice, texSlice[(int(j))])
+// 		j += texelsPerPixel
+// 	}
+// 	return projectedTexVSlice
+// }
+
+var sceneStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
+var rayStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
+
+var worldMap = world.Map{
+	{2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+	{2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
 }
-
-func filterTexSlice(texSlice []tcell.Style, height int) []tcell.Style {
-	// Project texVslice onto the height of a wall
-	projectedTexVSlice := []tcell.Style{}
-	texelsPerPixel := float64(len(texSlice)) / float64(height)
-	j := texelsPerPixel
-	for j < float64(len(texSlice)) {
-		projectedTexVSlice = append(projectedTexVSlice, texSlice[(int(j))])
-		j += texelsPerPixel
-	}
-	return projectedTexVSlice
-}
-
-// Maps a x, y world coord to the index of a vertical slice of a texture
-//var wallTextureMap map[Point]int
-
-//func Init() {
-//	wallTextureMap = generateWallTexMap(worldMap)
-//}
 
 func main() {
+
+	// TEST
+	//_, err := generateWalls(world.WorldMap)
+	//if err != nil {
+	//	return
+	//}
+
 	// TODO: make these styles global consts or sometething?
-	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
-	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
-	sceneStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
+	//boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
 	playerStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorGreen)
 	//rayStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
 
@@ -265,32 +126,46 @@ func main() {
 	if err := s.Init(); err != nil {
 		log.Fatalf("%+v", err)
 	}
-	s.SetStyle(defStyle)
+	defaultStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
+	s.SetStyle(defaultStyle)
 	//s.EnableMouse()
 	s.EnablePaste()
 	s.Clear()
 
-	// Draw initial boxes
-	//drawBox(s, 1, 1, 42, 7, boxStyle, "Click and drag to draw a box")
-	//drawBox(s, 5, 9, 32, 14, boxStyle, "Press C to reset")
+	// Pass this to our debug stuff so we can call DrawDebug from anywhere without passing a screen aroung
+	gfx.SetDebugScreen(s)
 
+	var playerPos = linalg.Vec2{X: 2, Y: 2}
+	var playerFwd = linalg.Vec2{X: 0, Y: 0}
+	var rayCount = 40
+	var fov = 0.72
+
+	var p = &player.Player{
+		Position: &playerPos,
+		Fwd:      &playerFwd,
+		ViewRays: player.GenerateRays(rayCount, fov, &playerPos, &playerFwd),
+		// rayStyle: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed),
+		ViewLen: 70,
+	}
 	// Event loop
 	for {
 		s.Clear()
 		//for i := 0; i < 200; i++ {
 		//	drawBar(s, i+px, 0, 20, boxStyle)
 		//}
-		//drawRays(s, player, worldMap, rayStyle)
-		drawPlayer(s, player, playerStyle)
-		drawScene(s, player, worldMap, sceneStyle)
-		drawMap(s, worldMap, boxStyle)
+		//drawRays(s, player, world.WorldMap, rayStyle)
+		//drawPlayer(s, player.Player, playerStyle)
+		p.Draw(s, playerStyle)
+		drawScene(s, p, worldMap, sceneStyle)
+		//drawMap(s, world.WorldMap, boxStyle)
+		worldMap.Draw(s, styleMap)
 		s.Show()
 
-		handleInput(s)
+		handleInput(s, p, worldMap)
 	}
 }
 
-func handleInput(s tcell.Screen) {
+func handleInput(s tcell.Screen, p *player.Player, worldMap world.Map) {
 	// Poll event
 	ev := s.PollEvent()
 
@@ -307,17 +182,85 @@ func handleInput(s tcell.Screen) {
 		} else if ev.Rune() == 'C' || ev.Rune() == 'c' {
 			s.Clear()
 		} else if ev.Rune() == 'w' { // Movement
-			player.moveFwd(1, worldMap)
+			p.MoveFwd(1, worldMap)
 		} else if ev.Rune() == 'a' {
-			player.rotate(-0.1)
+			p.Rotate(-0.1)
 		} else if ev.Rune() == 's' {
-			player.moveBack(1, worldMap)
+			p.MoveBack(1, worldMap)
 		} else if ev.Rune() == 'd' {
-			player.rotate(0.1)
+			p.Rotate(0.1)
 		} else if ev.Rune() == 'n' {
-			player.moveLeft(1, worldMap)
+			p.MoveLeft(1, worldMap)
 		} else if ev.Rune() == 'm' {
-			player.moveRight(1, worldMap)
+			p.MoveRight(1, worldMap)
 		}
 	}
 }
+
+// TODO: fucking god damnit this is messy
+
+//func intAbs(x int) int {
+//	if x < 0 {
+//		return -x
+//	}
+//	return x
+//}
+
+// Some fancy version of bresenhams
+// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+// http://members.chello.at/~easyfilter/Bresenham.pdf
+
+// Returns the distance, and the value of the map it intersected.
+// If no intersection, map value == 0
+// func castRay(screen tcell.Screen, WorldMap [][]int, x0, y0, x1, y1 int, style tcell.Style) *linalg.Vec2 {
+// 	dx := intAbs(x1 - x0)
+// 	dy := -intAbs(y1 - y0)
+// 	sx := -1
+// 	if x0 < x1 {
+// 		sx = 1
+// 	}
+// 	sy := -1
+// 	if y0 < y1 {
+// 		sy = 1
+// 	}
+// 	er := dx + dy
+
+// 	x := x0
+// 	y := y0
+
+// 	//rayLen := math.Sqrt(math.Pow(float64(x1-x0), 2) + math.Pow(float64(y1-y0), 2))
+// 	//dist := rayLen
+// 	intersectionPoint := &linalg.Vec2{}
+// 	for {
+// 		setContentEqualWidth(screen, x, y, ' ', nil, style)
+
+// 		// Get dists for drawing 3D scene
+// 		if world.WorldMap[y][x] != 0 {
+// 			//dist = math.Sqrt(math.Pow(float64(x-x0), 2) + math.Pow(float64(y-y0), 2))
+// 			intersectionPoint = &linalg.Vec2{float64(x), float64(y)}
+// 			break
+// 		}
+
+// 		if x == x1 && y == y1 {
+// 			break
+// 		}
+
+// 		e2 := 2 * er
+// 		if e2 >= dy {
+// 			if x == x1 {
+// 				break
+// 			}
+// 			er = er + dy
+// 			x = x + sx
+// 		}
+
+// 		if e2 <= dx {
+// 			if y == y1 {
+// 				break
+// 			}
+// 			er = er + dx
+// 			y = y + sy
+// 		}
+// 	}
+// 	return intersectionPoint
+// }
