@@ -39,7 +39,7 @@ var horizonYPos int = 15
 
 // TODO: make a 'scene' package?
 func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, style tcell.Style) {
-	dists := player.CastViewRays(worldMap, screen, style)
+	dists := player.CastViewRays(worldMap, screen, rayStyle)
 	// TODO: make these constants?
 	maxHeight := 50
 	horizonYPos := 20
@@ -138,7 +138,7 @@ func main() {
 	var playerPos = linalg.Vec2{X: 2, Y: 2}
 	//var playerFwd = linalg.Vec2{X: 0, Y: 0}
 	var playerRot = 0.0
-	var rayCount = 40
+	var rayCount = 25
 	var fov = 0.72
 
 	var p = &player.Player{

@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -95,6 +97,7 @@ func DrawBarWithColor(s tcell.Screen, screenPosX, screenPosY, height int, style 
 }
 
 func SetContentEqualWidth(screen tcell.Screen, x int, y int, primary rune, combining []rune, style tcell.Style) {
+	DrawDebugText(1, fmt.Sprintf("x: %v, y: %v", x, y))
 	screen.SetContent((x*2)+1, y, primary, combining, style)
 	screen.SetContent(x*2, y, primary, combining, style)
 }

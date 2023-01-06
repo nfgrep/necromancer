@@ -43,11 +43,11 @@ func (p *Player) CastViewRays(worldMap world.Map, screen tcell.Screen, rayStyle 
 		intersects := func(x, y float64) bool {
 			//gfx.DrawDebugText(i, fmt.Sprintf("ray: %v, x: %v, y: %v", i, x, y))
 			// Ignore negative and out-of-bounds values
-			gfx.SetContentEqualWidth(screen, int(x), int(y), ' ', nil, rayStyle) // Draw the ray
 			if x < 0 || y < 0 || x > float64(worldMap.Width()) || y > float64(worldMap.Height()) {
 				return false
 			}
 
+			gfx.SetContentEqualWidth(screen, int(x), int(y), ' ', nil, rayStyle) // Draw the ray in the top-down map view
 			return worldMap.WallExistsAt(x, y)
 		}
 
@@ -208,7 +208,10 @@ func GenerateRays(count int, fov float64, origin *linalg.Vec2, playerRot *float6
 				},
 				offsetAngle: -rayRot,
 			}
-			rays = append(rays, posViewRay, negViewRay)
+			// Prepend the negative rays, so that the rays are ordered from left to right
+			rays = append([]*ViewRay{negViewRay}, rays...)
+			// Then append the positive ray
+			rays = append(rays, posViewRay)
 		}
 	}
 
