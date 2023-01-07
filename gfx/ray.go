@@ -32,13 +32,13 @@ func (r *Ray) Tip(length float64) *linalg.Vec2 {
 func castRay(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, rayIdx int) *linalg.Vec2 {
 	if math.Abs(y1-y0) < math.Abs(x1-x0) {
 		if x0 > x1 {
-			return castRayLow(x1, y1, x0, y0, intersects, rayIdx)
+			return castRayLowReverse(x0, y0, x1, y1, intersects, rayIdx)
 		} else {
 			return castRayLow(x0, y0, x1, y1, intersects, rayIdx)
 		}
 	} else {
 		if y0 > y1 {
-			return castRayHigh(x1, y1, x0, y0, intersects, rayIdx)
+			return castRayHighReverse(x0, y0, x1, y1, intersects, rayIdx)
 		} else {
 			return castRayHigh(x0, y0, x1, y1, intersects, rayIdx)
 		}
@@ -72,6 +72,33 @@ func castRayLow(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, rayI
 	return &linalg.Vec2{X: x, Y: y}
 }
 
+func castRayLowReverse(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, rayIdx int) *linalg.Vec2 {
+	dx := x0 - x1
+	dy := y0 - y1
+	yi := -1.0
+	if dy < 0 {
+		yi = 1.0
+		dy = -dy
+	}
+	D := (2 * dy) - dx
+	y := y0
+	x := x0
+	//DrawDebugText(rayIdx, fmt.Sprintf("x: %v, y: %v", x, y))
+	for x >= x1 {
+		if intersects(x, y) {
+			return &linalg.Vec2{X: x, Y: y}
+		}
+		if D > 0 {
+			y = y + yi
+			D = D + (2 * (dy - dx))
+		} else {
+			D = D + 2*dy
+		}
+		x -= 1
+	}
+	return &linalg.Vec2{X: x, Y: y}
+}
+
 func castRayHigh(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, rayIdx int) *linalg.Vec2 {
 	dx := x1 - x0
 	dy := y1 - y0
@@ -95,6 +122,33 @@ func castRayHigh(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, ray
 			D = D + 2*dx
 		}
 		y += 1
+	}
+	return &linalg.Vec2{X: x, Y: y}
+}
+
+func castRayHighReverse(x0, y0, x1, y1 float64, intersects func(x, y float64) bool, rayIdx int) *linalg.Vec2 {
+	dx := x0 - x1
+	dy := y0 - y1
+	xi := -1.0
+	if dx < 0 {
+		xi = 1.0
+		dx = -dx
+	}
+	D := (2 * dx) - dy
+	x := x0
+	y := y0
+	//DrawDebugText(rayIdx, fmt.Sprintf("x: %v, y: %v", x, y))
+	for y >= y1 {
+		if intersects(x, y) {
+			return &linalg.Vec2{X: x, Y: y}
+		}
+		if D > 0 {
+			x = x + xi
+			D = D + (2 * (dx - dy))
+		} else {
+			D = D + 2*dx
+		}
+		y -= 1
 	}
 	return &linalg.Vec2{X: x, Y: y}
 }

@@ -22,7 +22,7 @@ type Wall struct {
 func (w *Wall) worldToLocal(point linalg.Vec2) linalg.Vec2 {
 	x := point.X - w.position.X
 	y := point.X - w.position.X
-	return linalg.Vec2{x, y}
+	return linalg.Vec2{X: x, Y: y}
 }
 
 //var wallFlavours = map[int]Wall{

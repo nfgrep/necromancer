@@ -138,7 +138,7 @@ func main() {
 	var playerPos = linalg.Vec2{X: 2, Y: 2}
 	//var playerFwd = linalg.Vec2{X: 0, Y: 0}
 	var playerRot = 0.0
-	var rayCount = 25
+	var rayCount = 9
 	var fov = 0.72
 
 	var p = &player.Player{
