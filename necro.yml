@@ -1,0 +1,47 @@
+maps:
+  spawn:
+    - [ W, w, w, w, w, w, w, w, w, w, w, W ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, p, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, a, a, w ]
+    - [ w, a, a, a, a, a, a, a, a, W, w, W ]
+    - [ w, a, a, a, a, a, a, a, a, w, a, w ]
+    - [ W, C, c, c, c, c, c, c, C, W, w, W ]
+entities:
+  player:
+    symbol: p
+  brick-wall:
+    type: wall
+    symbol: w
+    terminal_symbol: W
+    height: 8
+    texture: # 8x8 texture
+      - [ r, g, b, r, g, b, r, g ]
+      - [ b, r, g, b, r, g, b, r ]
+      - [ g, b, r, g, b, r, g, b ]
+      - [ r, g, b, r, g, b, r, g ] 
+      - [ b, r, g, b, r, g, b, r ]
+      - [ g, b, r, g, b, r, g, b ]
+      - [ r, g, b, r, g, b, r, g ]
+      - [ b, r, g, b, r, g, b, r ]
+  concrete-wall:
+    type: wall
+    symbol: c
+    terminal_symbol: C
+    height: 9
+    texture:
+      - [ r, r, b, b, r, r, b, b ]
+      - [ b, b, r, r, b, b, r, r ]
+      - [ r, r, b, b, r, r, b, b ]
+      - [ b, b, r, r, b, b, r, r ]
+      - [ r, r, b, b, r, r, b, b ]
+      - [ b, b, r, r, b, b, r, r ]
+      - [ r, r, b, b, r, r, b, b ]
+      - [ b, b, r, r, b, b, r, r ]
+  air:
+    symbol: a

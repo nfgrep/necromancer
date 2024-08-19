@@ -1,31 +1,100 @@
 package world
 
 import (
-	"github.com/nfgrep/necromancer/gfx"
+	"strings"
+
+	"github.com/nfgrep/necromancer/config"
 	"github.com/nfgrep/necromancer/linalg"
 )
 
-// So the idea is basiclaly to to world -> wall -> texture
-// We get the wall from the number in the map, we then take that walls position/dimensions to get the local coords from the world coords
-// We then use those local coords, and map them to tex coords, which we then use to index into the texture
+// A map from x, y world coords to a wall
+type Walls [][]*Wall
+
+func WallsFromMap(grid Map, entities map[string]config.EntityConfig) [][]*Wall {
+
+	// These walls don't yet have start and end points
+	walls := wallsFromConfig(entities)
+
+	// Fill in the start and end points for each wall
+	// Also returns a 2D array from world coords to walls
+	wallsOut := fillStartAndEnd(walls, grid)
+
+	return wallsOut
+}
+
+// TODO: this does too much
+func fillStartAndEnd(walls map[string]Wall, grid Map) [][]*Wall {
+	rows, cols := len(grid), len(grid[0])
+
+	wallsOut := make([][]*Wall, rows)
+	for i := range wallsOut {
+		wallsOut[i] = make([]*Wall, cols)
+	}
+
+	for y := 0; y < rows; y++ {
+		for x := 0; x < cols; x++ {
+			wall, ok := walls[grid[y][x]]
+			if ok {
+				symbol := wall.Symbol
+
+				// Check horizontal wall
+				if x+1 < cols && grid[y][x+1] == symbol {
+					end := findWallEnd(grid, x+1, y, symbol, true)
+					wall.Start = linalg.Vec2{X: float64(x), Y: float64(y)}
+					wall.End = end
+					for i := x; i <= int(end.X); i++ {
+						wallsOut[y][i] = &wall
+					}
+				}
+
+				// Check vertical wall
+				if y+1 < rows && grid[y+1][x] == symbol {
+					end := findWallEnd(grid, x, y+1, symbol, false)
+					wall.Start = linalg.Vec2{X: float64(x), Y: float64(y)}
+					wall.End = end
+					for i := y; i <= int(end.Y); i++ {
+						wallsOut[i][x] = &wall
+					}
+				}
+			}
+		}
+	}
+
+	return wallsOut
+}
+
+func wallsFromConfig(entities map[string]config.EntityConfig) map[string]Wall {
+	walls := make(map[string]Wall)
+	for _, entity := range entities {
+		walls[entity.TerminalSymbol] = Wall{
+			Height:         entity.Height,
+			Symbol:         entity.Symbol,
+			TerminalSymbol: entity.TerminalSymbol,
+		}
+	}
+	return walls
+}
+
+func findWallEnd(grid [][]string, x, y int, symbol string, horizontal bool) linalg.Vec2 {
+	if horizontal {
+		for x < len(grid[0]) && (grid[y][x] == symbol || strings.ToLower(grid[y][x]) == symbol) {
+			x++
+		}
+		return linalg.Vec2{X: float64(x - 1), Y: float64(y)}
+	}
+	for y < len(grid) && (grid[y][x] == symbol || strings.ToLower(grid[y][x]) == symbol) {
+		y++
+	}
+	return linalg.Vec2{X: float64(x), Y: float64(y - 1)}
+}
 
 type Wall struct {
-	texture    gfx.Texture
-	position   linalg.Vec2 // in world space
-	dimensions linalg.Vec2 // x = width, y = height
+	Height int
+	// Assume these are sorted, and that the first point is the start, and the last point is the end
+	// Parts []linalg.Vec2
 
-	//p0      Vec3 // minima, in world-space (probably upper left?)
-	//p1      Vec3 // maxima, in world-space (probbaly lower right?)
-	//normal  Vec3
+	Start          linalg.Vec2
+	End            linalg.Vec2
+	Symbol         string
+	TerminalSymbol string
 }
-
-func (w *Wall) worldToLocal(point linalg.Vec2) linalg.Vec2 {
-	x := point.X - w.position.X
-	y := point.X - w.position.X
-	return linalg.Vec2{X: x, Y: y}
-}
-
-//var wallFlavours = map[int]Wall{
-//	1: {texture: checkerTexture, height: 10},
-//	2: {texture: wallTexture, height: 12},
-//}

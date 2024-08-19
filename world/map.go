@@ -2,13 +2,29 @@ package world
 
 import (
 	"github.com/gdamore/tcell/v2"
+	"github.com/nfgrep/necromancer/config"
 	"github.com/nfgrep/necromancer/gfx"
 )
 
-type Map [][]int
+func MapsFromConfig(configFname string) (map[string]Map, error) {
+	mapsConfig, err := config.ParseMaps(configFname)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert MapConfig to Map
+	maps := make(map[string]Map)
+	for name, mapData := range mapsConfig {
+		maps[name] = Map(mapData)
+	}
+
+	return maps, nil
+}
+
+type Map [][]string
 
 // TODO: I'm assuming that that passing the map by value is fine, since it's just a pointer to an array of arrays of ints.
-func (m Map) at(x, y float64) int {
+func (m Map) at(x, y float64) string {
 	return m[int(y)][int(x)]
 }
 
@@ -21,37 +37,57 @@ func (m Map) Height() int {
 }
 
 func (m Map) WallExistsAt(x, y float64) bool {
-	return m.at(x, y) != 0
+	return m.at(x, y) != "a" // TODO: make this configurable
 }
 
-func (m Map) Draw(s tcell.Screen, styleMap map[int]tcell.Style) {
+func (m Map) Draw(s tcell.Screen, styleMap map[string]tcell.Style) {
 	// TODO: is this legit? what if becomes float?
 	numRows := len(m)
 	numCols := len(m[0])
 	for x := 0; x < numCols; x++ {
 		for y := 0; y < numRows; y++ {
-			if m[y][x] != 0 {
-				gfx.SetContentEqualWidth(s, x, y, ' ', nil, styleMap[m[y][x]])
-			}
+			// if m[y][x] != "a" {
+			gfx.SetContentEqualWidth(s, x, y, ' ', nil, styleMap[m[y][x]])
+			// }
 		}
 	}
+}
+
+// Ideally we'd just ask some "parse" pacakge like "hey give be the map in this particular format"
+
+// Scale the map by a given factor
+func (m Map) Scale(scale float64) Map {
+	scaledHeight := int(float64(m.Height()) * scale)
+	scaledWidth := int(float64(m.Width()) * scale)
+	scaledMap := make(Map, scaledHeight)
+
+	for y := 0; y < scaledHeight; y++ {
+		scaledMap[y] = make([]string, scaledWidth)
+		for x := 0; x < scaledWidth; x++ {
+			originalY := int(float64(y) / scale)
+			originalX := int(float64(x) / scale)
+			scaledMap[y][x] = m[originalY][originalX]
+		}
+	}
+
+	return scaledMap
 }
 
 // ------------ Generating walls ------------
 
 // We expect a total of 3 walls here
-var testMap = [][]int{
-	{0, 0, 0, 0, 0, 0, 0, 0},
-	{0, 1, 1, 1, 1, 1, 1, 0},
-	{0, 1, 0, 0, 0, 0, 1, 0},
-	{0, 1, 0, 0, 0, 0, 1, 0},
-	{0, 1, 1, 1, 1, 1, 1, 0},
-	{2, 2, 2, 2, 0, 0, 0, 0},
-	{0, 0, 0, 2, 0, 0, 0, 0},
-	{0, 0, 0, 2, 0, 0, 0, 0},
-	{0, 0, 0, 2, 0, 0, 0, 0},
-	{2, 2, 2, 2, 0, 3, 3, 3},
-}
+// var testMap = [][]int{
+// 	{0, 0, 0, 0, 0, 0, 0, 0},
+// 	{0, 1, 1, 1, 1, 1, 1, 0},
+// 	{0, 1, 0, 0, 0, 0, 1, 0},
+// 	{0, 1, 0, 0, 0, 0, 1, 0},
+// 	{0, 1, 1, 1, 1, 1, 1, 0},
+// 	{2, 2, 2, 2, 0, 0, 0, 0},
+// 	{0, 0, 0, 2, 0, 0, 0, 0},
+// 	{0, 0, 0, 2, 0, 0, 0, 0},
+// 	{0, 0, 0, 2, 0, 0, 0, 0},
+// 	{2, 2, 2, 2, 0, 3, 3, 3},
+// }
 
 // func generateWalls(worldMap Map) ([]Wall, error) {
 // 	done := false

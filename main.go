@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/nfgrep/necromancer/config"
 	"github.com/nfgrep/necromancer/gfx"
 	"github.com/nfgrep/necromancer/linalg"
 	"github.com/nfgrep/necromancer/player"
@@ -12,30 +14,10 @@ import (
 )
 
 // maps world.WorldMap values to styles
-var styleMap = map[int]tcell.Style{
-	1: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue),
-	2: tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal),
+var styleMap = map[string]tcell.Style{
+	"a": tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue),
+	"w": tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorTeal),
 }
-
-// // Draws a vertivcal bar centered about y
-// func drawBarWithTex(s tcell.Screen, screenX, screenY, height int, texSlice []tcell.Style) {
-// 	//compressedTex := minifyTextureSlice(texSlice, height)
-// 	//ytop := screenY - (height / 2)
-// 	//ybot := screenY + (height / 2)
-// 	//for y := ytop; y <= ybot; y++ {
-// 	//	//wallX, wallY := worldToObjectSpace(screenX, y) // y will probably be the same for world and object space
-// 	//	//u, v := projectorFunction(wall, wallX, wallY)``
-// 	//	setContentEqualWidth(s, screenX, y, ' ', nil, tex[(y+ybot)])
-// 	//}
-// 	ytop := screenY - (height / 2)
-// 	for i, style := range texSlice { // Assuming len(texSlice) == height
-// 		y := i + ytop
-// 		setContentEqualWidth(s, screenX, y, ' ', nil, style)
-// 	}
-// }
-
-var maxWallHeight int = 50
-var horizonYPos int = 15
 
 // TODO: make a 'scene' package?
 func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, style tcell.Style) {
@@ -46,73 +28,43 @@ func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, s
 	gfx.DrawBarsForDists(screen, dists, player.ViewLen, maxHeight, horizonYPos, worldMap.Width(), style)
 }
 
-// func getTexSlice(tex gfx.Texture, texX int) []tcell.Style {
-// 	// Generate the vertical slice of texture for this bar
-// 	//barTex := textures[world.WorldMap[int(intersect.y)][int(intersect.x)]]
-// 	texSlice := []tcell.Style{}
-// 	for _, horiz := range tex {
-// 		//textureColumn := wallTextureMap[*intersect]
-// 		texSlice = append(texSlice, horiz[texX])
-// 	}
-// 	return texSlice
-// }
-
-// func filterTexSlice(texSlice []tcell.Style, height int) []tcell.Style {
-// 	// Project texVslice onto the height of a wall
-// 	projectedTexVSlice := []tcell.Style{}
-// 	texelsPerPixel := float64(len(texSlice)) / float64(height)
-// 	j := texelsPerPixel
-// 	for j < float64(len(texSlice)) {
-// 		projectedTexVSlice = append(projectedTexVSlice, texSlice[(int(j))])
-// 		j += texelsPerPixel
-// 	}
-// 	return projectedTexVSlice
-// }
-
 var sceneStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
 var rayStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorRed)
 
-var worldMap = world.Map{
-	{2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-	{2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2},
+type NecroYml struct {
+	// Maps is a hashmap of maps each with a key/name, and each map is a 2d array of strings
+	Maps map[string]world.Map `yaml:"maps"`
+	// Types is a hashmap of types for which each unit of the map is of that type
+	Types map[string]string `yaml:"types"`
 }
 
 func main() {
 
-	// TEST
-	//_, err := generateWalls(world.WorldMap)
-	//if err != nil {
-	//	return
-	//}
+	// TODO: only load once
+	maps, err := world.MapsFromConfig("necro.yml")
+	if err != nil {
+		log.Fatalf("unable to parse world: %v", err)
+	}
 
+	entities, err := config.ParseEntities("necro.yml")
+	if err != nil {
+		log.Fatalf("unable to parse entities: %v", err)
+	}
+
+	worldMap := maps["spawn"]
+
+	walls := world.WallsFromMap(worldMap, entities)
+
+	fmt.Println(walls[0][0])
+
+	return
+
+	// walls := world.GenerateWalls(worldMap, []string{"spawn"})
+	// fmt.Println(walls)
+
+	// return
+
+	// fmt.Println(worldMap)
 	// TODO: make these styles global consts or sometething?
 	//boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
 	playerStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorGreen)
@@ -157,10 +109,11 @@ func main() {
 		//}
 		//drawRays(s, player, world.WorldMap, rayStyle)
 		//drawPlayer(s, player.Player, playerStyle)
-		p.Draw(s, playerStyle)
-		drawScene(s, p, worldMap, sceneStyle)
 		//drawMap(s, world.WorldMap, boxStyle)
 		worldMap.Draw(s, styleMap)
+		p.Draw(s, playerStyle)
+		drawScene(s, p, worldMap, sceneStyle)
+
 		s.Show()
 
 		handleInput(s, p, worldMap)
