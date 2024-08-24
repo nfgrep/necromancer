@@ -1,44 +1,20 @@
 package config
 
 import (
-	"os"
+	"fmt"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type EntitiesConfig struct {
-	Entities map[string]EntityConfig `yaml:"entities"`
+	Entities map[string]yaml.Node `yaml:"entities"`
 }
 
-// TODO: factor these into individual types?
-// All possible fields for an entity
-type EntityConfig struct {
-	Type           string     `yaml:"type,omitempty"`
-	Symbol         string     `yaml:"symbol"`
-	TerminalSymbol string     `yaml:"terminal_symbol,omitempty"`
-	Height         int        `yaml:"height,omitempty"`
-	Texture        [][]string `yaml:"texture,omitempty"`
-}
-
-func ParseEntities(fpath string) (map[string]EntityConfig, error) {
-	data, err := os.ReadFile(fpath)
-	if err != nil {
-		return nil, err
-	}
-
+func ParseEntitiesConfig(data []byte) (*EntitiesConfig, error) {
 	var config EntitiesConfig
-	err = yaml.Unmarshal(data, &config)
+	err := yaml.Unmarshal(data, &config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshaling YAML: %v", err)
 	}
-
-	// Set default type if not specified
-	for id, entity := range config.Entities {
-		if entity.Type == "" {
-			entity.Type = id
-			config.Entities[id] = entity
-		}
-	}
-
-	return config.Entities, nil
+	return &config, nil
 }

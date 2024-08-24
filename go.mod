@@ -2,7 +2,10 @@ module github.com/nfgrep/necromancer
 
 go 1.19
 
-require github.com/gdamore/tcell/v2 v2.5.3
+require (
+	github.com/gdamore/tcell/v2 v2.5.3
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/gdamore/encoding v1.0.0 // indirect
@@ -12,5 +15,4 @@ require (
 	golang.org/x/sys v0.0.0-20220318055525-2edf467146b5 // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

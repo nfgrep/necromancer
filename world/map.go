@@ -38,6 +38,11 @@ func (m Map) Height() int {
 
 func (m Map) WallExistsAt(x, y float64) bool {
 	return m.at(x, y) != "a" // TODO: make this configurable
+
+	// Pull the entity at this position
+	// entity := m.at(x, y)
+
+	// Check if the entity is a wall
 }
 
 func (m Map) Draw(s tcell.Screen, styleMap map[string]tcell.Style) {

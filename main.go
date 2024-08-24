@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/nfgrep/necromancer/config"
+	"github.com/nfgrep/necromancer/entities"
 	"github.com/nfgrep/necromancer/gfx"
 	"github.com/nfgrep/necromancer/linalg"
 	"github.com/nfgrep/necromancer/player"
@@ -40,22 +40,30 @@ type NecroYml struct {
 
 func main() {
 
+	parsedEntities, err := entities.ParseEntitiesFromFile("necro.yml")
+	if err != nil {
+		log.Fatalf("unable to parse entities: %v", err)
+	}
+
+	// Look through entities and find all the wall entities
+	wallEntities := make(map[string]entities.WallEntity)
+	for _, entity := range parsedEntities {
+		if wallEntity, ok := entity.(*entities.WallEntity); ok {
+			wallEntities[wallEntity.TerminalSymbol] = *wallEntity
+		}
+	}
+
 	// TODO: only load once
 	maps, err := world.MapsFromConfig("necro.yml")
 	if err != nil {
 		log.Fatalf("unable to parse world: %v", err)
 	}
 
-	entities, err := config.ParseEntities("necro.yml")
-	if err != nil {
-		log.Fatalf("unable to parse entities: %v", err)
-	}
-
 	worldMap := maps["spawn"]
 
-	walls := world.WallsFromMap(worldMap, entities)
+	walls := world.WallsFromMap(worldMap, wallEntities)
 
-	fmt.Println(walls[0][0])
+	fmt.Println(walls[11][1])
 
 	return
 

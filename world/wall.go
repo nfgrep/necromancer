@@ -3,21 +3,23 @@ package world
 import (
 	"strings"
 
-	"github.com/nfgrep/necromancer/config"
+	"github.com/nfgrep/necromancer/entities"
 	"github.com/nfgrep/necromancer/linalg"
 )
 
 // A map from x, y world coords to a wall
 type Walls [][]*Wall
 
-func WallsFromMap(grid Map, entities map[string]config.EntityConfig) [][]*Wall {
+func WallsFromMap(grid Map, walls map[string]entities.WallEntity) [][]*Wall {
 
 	// These walls don't yet have start and end points
-	walls := wallsFromConfig(entities)
+	wallsByTerminal := wallsByTerminalSymbol(walls)
+
+	// fmt.Println(wallsByTerminal)
 
 	// Fill in the start and end points for each wall
 	// Also returns a 2D array from world coords to walls
-	wallsOut := fillStartAndEnd(walls, grid)
+	wallsOut := fillStartAndEnd(wallsByTerminal, grid)
 
 	return wallsOut
 }
@@ -63,8 +65,17 @@ func fillStartAndEnd(walls map[string]Wall, grid Map) [][]*Wall {
 	return wallsOut
 }
 
-func wallsFromConfig(entities map[string]config.EntityConfig) map[string]Wall {
+func wallsByTerminalSymbol(entities map[string]entities.WallEntity) map[string]Wall {
 	walls := make(map[string]Wall)
+	// for _, entity := range entities {
+	// 	walls[entity.TerminalSymbol] = Wall{
+	// 		Height:         entity.Height,
+	// 		Symbol:         entity.Symbol,
+	// 		TerminalSymbol: entity.TerminalSymbol,
+	// 	}
+	// }
+	// return walls
+
 	for _, entity := range entities {
 		walls[entity.TerminalSymbol] = Wall{
 			Height:         entity.Height,
