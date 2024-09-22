@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -20,12 +19,36 @@ var styleMap = map[string]tcell.Style{
 }
 
 // TODO: make a 'scene' package?
-func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, style tcell.Style) {
-	dists := player.CastViewRays(worldMap, screen, rayStyle)
-	// TODO: make these constants?
+func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, walls [][]*world.Wall, style tcell.Style) {
+	intersections := player.CastViewRays(worldMap, screen, rayStyle)
+
+	textureSlices := make([][]tcell.Style, len(intersections))
+	for i, intersect := range intersections {
+		wall := walls[int(intersect.Y)][int(intersect.X)]
+		if wall != nil {
+			textureSlices[i] = findTextureSlice(wall, intersect)
+		}
+	}
+
+	dists := player.CalculateViewDistances(intersections)
 	maxHeight := 50
 	horizonYPos := 20
-	gfx.DrawBarsForDists(screen, dists, player.ViewLen, maxHeight, horizonYPos, worldMap.Width(), style)
+	gfx.DrawBarsForDists(screen, dists, player.ViewLen, maxHeight, horizonYPos, worldMap.Width(), style, textureSlices)
+}
+
+func findTextureSlice(wall *world.Wall, intersect *linalg.Vec2) []tcell.Style {
+	wallVector := wall.End.Sub(wall.Start)
+	intersectVector := intersect.Sub(wall.Start)
+
+	percentAlongWall := intersectVector.Magnitude() / wallVector.Magnitude()
+
+	texture := wall.GetTexture()
+
+	texWidth := len(texture[0])
+
+	// Subtract 1 because we're using 0-indexing
+	textureSlice := texture[int(percentAlongWall*float64(texWidth-1))]
+	return textureSlice
 }
 
 var sceneStyle = tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlue)
@@ -46,6 +69,7 @@ func main() {
 	}
 
 	// Look through entities and find all the wall entities
+	// A map from terminal symbol to wall entity
 	wallEntities := make(map[string]entities.WallEntity)
 	for _, entity := range parsedEntities {
 		if wallEntity, ok := entity.(*entities.WallEntity); ok {
@@ -63,9 +87,9 @@ func main() {
 
 	walls := world.WallsFromMap(worldMap, wallEntities)
 
-	fmt.Println(walls[11][1])
+	// fmt.Println(walls[11][1])
 
-	return
+	// return
 
 	// walls := world.GenerateWalls(worldMap, []string{"spawn"})
 	// fmt.Println(walls)
@@ -120,7 +144,7 @@ func main() {
 		//drawMap(s, world.WorldMap, boxStyle)
 		worldMap.Draw(s, styleMap)
 		p.Draw(s, playerStyle)
-		drawScene(s, p, worldMap, sceneStyle)
+		drawScene(s, p, worldMap, walls, sceneStyle)
 
 		s.Show()
 

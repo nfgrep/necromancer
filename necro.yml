@@ -19,7 +19,7 @@ entities:
     type: wall
     symbol: w
     terminal_symbol: W
-    height: 8
+    height: 4
     texture: # 8x8 texture
       - [ r, g, b, r, g, b, r, g ]
       - [ b, r, g, b, r, g, b, r ]

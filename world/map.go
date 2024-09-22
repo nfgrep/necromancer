@@ -37,7 +37,7 @@ func (m Map) Height() int {
 }
 
 func (m Map) WallExistsAt(x, y float64) bool {
-	return m.at(x, y) != "a" // TODO: make this configurable
+	return m.at(x, y) != "a" && m.at(x, y) != "p" // TODO: make this configurable
 
 	// Pull the entity at this position
 	// entity := m.at(x, y)

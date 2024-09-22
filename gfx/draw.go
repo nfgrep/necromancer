@@ -27,7 +27,7 @@ func DrawDebugText(offset int, text string) {
 // 	DrawBarsForDists(screen, dists, player.ViewLen, maxHeight, horizonYPos, worldMap.Width(), style)
 // }
 
-func DrawBarsForDists(screen tcell.Screen, dists []float64, viewLen float64, maxHeight, horizonYPos, screenXOffset int, style tcell.Style) {
+func DrawBarsForDists(screen tcell.Screen, dists []float64, viewLen float64, maxHeight, horizonYPos, screenXOffset int, style tcell.Style, textureSlices [][]tcell.Style) {
 	for i, dist := range dists {
 		// Dont draw anything if we didn't intersect anything
 		if dist >= viewLen {
@@ -78,12 +78,38 @@ func DrawBarsForDists(screen tcell.Screen, dists []float64, viewLen float64, max
 
 		//barStyle := styleMap[world.WorldMap[int(intersect.y)][int(intersect.x)]]
 		//drawDebugText(screen, fmt.Sprintf("barHeight: %v", barHeight))
-		DrawBarWithColor(screen, i+screenXOffset, horizonYPos, barHeight, style)
+		textureSlice := textureSlices[i]
+		DrawBarWithTexture(screen, i+screenXOffset, horizonYPos, barHeight, style, textureSlice)
+		// DrawBarWithColor(screen, i+screenXOffset, horizonYPos, barHeight, style)
 		// -- end Draw bar
 
 		//dists = append(dists, int(rayDist))
 		//drawText(screen, 2, i+30, 70, i+35, style, fmt.Sprintf("ray: %v, ray.rot: %v, rx1: %v, ry1: %v, rayDist: %v", i, ray.rot, rx1, ry1, rayDist))
 	}
+}
+
+func DrawBarWithTexture(s tcell.Screen, screenPosX, screenPosY, height int, style tcell.Style, textureSlice []tcell.Style) {
+	ytop := screenPosY - (height / 2)
+
+	scaledSlice := scaleTextureSlice(textureSlice, height)
+
+	for i := 0; i < height; i++ {
+		y := i + ytop
+		SetContentEqualWidth(s, screenPosX, y, ' ', nil, scaledSlice[i])
+	}
+}
+
+func scaleTextureSlice(textureSlice []tcell.Style, height int) []tcell.Style {
+	textureWidth := len(textureSlice)
+
+	scaledSlice := make([]tcell.Style, height)
+
+	for x := 0; x < height; x++ {
+		texX := (x * textureWidth) / height
+		scaledSlice[x] = textureSlice[texX]
+	}
+
+	return scaledSlice
 }
 
 func DrawBarWithColor(s tcell.Screen, screenPosX, screenPosY, height int, style tcell.Style) {

@@ -8,14 +8,6 @@ import (
 	"github.com/nfgrep/necromancer/config"
 )
 
-// TODO: old code, remove
-type EntityConfig struct {
-	Type           string `yaml:"type,omitempty"`
-	Symbol         string `yaml:"symbol"`
-	TerminalSymbol string `yaml:"terminal_symbol"`
-	Height         int    `yaml:"height"`
-}
-
 type EntityType string
 
 type BaseEntity struct {

@@ -28,6 +28,10 @@ func (v *Vec2) Normalized() *Vec2 {
 	return &Vec2{v.X / mag, v.Y / mag}
 }
 
+func (v *Vec2) Dot(v2 Vec2) float64 {
+	return v.X*v2.X + v.Y*v2.Y
+}
+
 type Vec3 struct {
 	x float64
 	y float64

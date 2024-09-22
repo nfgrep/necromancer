@@ -28,17 +28,10 @@ func (p *Player) Draw(screen tcell.Screen, style tcell.Style) {
 	//drawDebugText(screen, fmt.Sprintf("player dir: %v", player.Fwd))
 }
 
-// Returns an array of the distances to the walls for each ray
-// TODO: the screen is just to draw debug rays, maybe remove?
-func (p *Player) CastViewRays(worldMap world.Map, screen tcell.Screen, rayStyle tcell.Style) []float64 {
-	dists := []float64{}
+// Returns an array of the intersection points for each ray
+func (p *Player) CastViewRays(worldMap world.Map, screen tcell.Screen, rayStyle tcell.Style) []*linalg.Vec2 {
+	intersections := []*linalg.Vec2{}
 	for i, viewRay := range p.ViewRays {
-		// Get endpoints for ray
-		//rEnd := ray.GetEnd(player.ViewLen)
-		// rx1 := player.pos.X + math.Cos(ray.rot+player.rot)*float64(player.ViewLen)
-		// ry1 := player.pos.Y + math.Sin(ray.rot+player.rot)*float64(player.ViewLen)
-		//intersect := castRay(screen, world.WorldMap, int(player.x), int(player.y), int(rx1), int(ry1), player.rayStyle)
-
 		// Define a function that runs on each iteration of the raycast, and checks if we've hit a wall
 		intersects := func(x, y float64) bool {
 			// Ignore negative and out-of-bounds values
@@ -50,12 +43,17 @@ func (p *Player) CastViewRays(worldMap world.Map, screen tcell.Screen, rayStyle 
 			return worldMap.WallExistsAt(x, y)
 		}
 
-		// TODO: combine the offset witht the base ray and cast that.
 		intersect := viewRay.Cast(p.ViewLen, intersects, i)
-		//gfx.DrawDebugText(i, fmt.Sprintf("ray: %v, intersect: %v", i, intersect))
+		intersections = append(intersections, intersect)
+	}
+	return intersections
+}
 
+// Calculates the distances from the player to the intersection points
+func (p *Player) CalculateViewDistances(intersections []*linalg.Vec2) []float64 {
+	dists := []float64{}
+	for _, intersect := range intersections {
 		rayDist := math.Sqrt(math.Pow(float64(p.Position.X-intersect.X), 2) + math.Pow(float64(p.Position.Y-intersect.Y), 2))
-
 		dists = append(dists, rayDist)
 	}
 	return dists
