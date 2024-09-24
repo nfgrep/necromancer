@@ -39,7 +39,7 @@ func DrawBarsForDists(screen tcell.Screen, dists []float64, viewLen float64, max
 		//correctedRayDist := rayDist * math.Cos(ray.rot)
 
 		// Get the height of the bar to draw
-		barHeight := maxHeight - int(dist)
+		barHeight := maxHeight - int(dist*2) // To make it more pronounced
 		if barHeight == 0 {
 			continue
 		}
@@ -79,7 +79,7 @@ func DrawBarsForDists(screen tcell.Screen, dists []float64, viewLen float64, max
 		//barStyle := styleMap[world.WorldMap[int(intersect.y)][int(intersect.x)]]
 		//drawDebugText(screen, fmt.Sprintf("barHeight: %v", barHeight))
 		textureSlice := textureSlices[i]
-		DrawBarWithTexture(screen, i+screenXOffset, horizonYPos, barHeight, style, textureSlice)
+		DrawBarWithTexture(screen, i, horizonYPos, screenXOffset, barHeight, 2, style, textureSlice)
 		// DrawBarWithColor(screen, i+screenXOffset, horizonYPos, barHeight, style)
 		// -- end Draw bar
 
@@ -88,14 +88,33 @@ func DrawBarsForDists(screen tcell.Screen, dists []float64, viewLen float64, max
 	}
 }
 
-func DrawBarWithTexture(s tcell.Screen, screenPosX, screenPosY, height int, style tcell.Style, textureSlice []tcell.Style) {
+func DrawBarWithTexture(s tcell.Screen, screenPosX, screenPosY, screenXOffset, height int, width int, style tcell.Style, textureSlice []tcell.Style) {
 	ytop := screenPosY - (height / 2)
 
 	scaledSlice := scaleTextureSlice(textureSlice, height)
 
-	for i := 0; i < height; i++ {
-		y := i + ytop
-		SetContentEqualWidth(s, screenPosX, y, ' ', nil, scaledSlice[i])
+	// // Calculate the bar width based on the width modifier
+	// barWidth := int(math.Ceil(widthModifier))
+
+	// // Ensure the bar width is at least 1 pixel
+	// if barWidth < 1 {
+	// 	barWidth = 1
+	// }
+
+	// for i := 0; i < height; i++ {
+	// 	y := i + ytop
+	// 	for w := 0; w < barWidth; w++ {
+	// 		SetContentEqualWidth(s, screenPosX+w, y, ' ', nil, scaledSlice[i])
+	// 	}
+	// }
+
+	endX := ((screenPosX + 1) * width) - 1
+	startX := (endX - width) + 1
+
+	for i := startX; i <= endX; i++ {
+		for j := 0; j < height; j++ {
+			SetContentEqualWidth(s, i+screenXOffset, ytop+j, ' ', nil, scaledSlice[j])
+		}
 	}
 }
 

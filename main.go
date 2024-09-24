@@ -31,7 +31,7 @@ func drawScene(screen tcell.Screen, player *player.Player, worldMap world.Map, w
 	}
 
 	dists := player.CalculateViewDistances(intersections)
-	maxHeight := 50
+	maxHeight := 30
 	horizonYPos := 20
 	gfx.DrawBarsForDists(screen, dists, player.ViewLen, maxHeight, horizonYPos, worldMap.Width(), style, textureSlices)
 }
@@ -122,7 +122,7 @@ func main() {
 	var playerPos = linalg.Vec2{X: 2, Y: 2}
 	//var playerFwd = linalg.Vec2{X: 0, Y: 0}
 	var playerRot = 0.0
-	var rayCount = 9
+	var rayCount = 12
 	var fov = 0.72
 
 	var p = &player.Player{
