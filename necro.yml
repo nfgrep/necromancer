@@ -19,16 +19,16 @@ entities:
     type: wall
     symbol: w
     terminal_symbol: W
-    height: 4
+    height: 8
     texture: # 8x8 texture
-      - [ r, g, b, r, g, b, r, g ]
-      - [ b, r, g, b, r, g, b, r ]
-      - [ g, b, r, g, b, r, g, b ]
-      - [ r, g, b, r, g, b, r, g ] 
-      - [ b, r, g, b, r, g, b, r ]
-      - [ g, b, r, g, b, r, g, b ]
-      - [ r, g, b, r, g, b, r, g ]
-      - [ b, r, g, b, r, g, b, r ]
+      - [ r, r, r, r, g, g, g, g ]
+      - [ r, r, r, r, g, g, g, g ]
+      - [ r, r, r, r, g, g, g, g ]
+      - [ r, r, r, r, g, g, g, g ]
+      - [ b, b, b, b, r, g, b, r ]
+      - [ b, b, b, b, g, b, r, g ]
+      - [ b, b, b, b, b, r, g, b ]
+      - [ b, b, b, b, r, g, b, r ]
   concrete-wall:
     type: wall
     symbol: c

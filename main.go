@@ -44,10 +44,15 @@ func findTextureSlice(wall *world.Wall, intersect *linalg.Vec2) []tcell.Style {
 
 	texture := wall.GetTexture()
 
+	texHeight := len(texture)
 	texWidth := len(texture[0])
 
 	// Subtract 1 because we're using 0-indexing
-	textureSlice := texture[int(percentAlongWall*float64(texWidth-1))]
+	var textureSlice []tcell.Style
+	// textureSlice = texture[int(percentAlongWall*float64(texWidth-1))]
+	for i := 0; i < texHeight; i++ {
+		textureSlice = append(textureSlice, texture[i][int(percentAlongWall*float64(texWidth-1))])
+	}
 	return textureSlice
 }
 
@@ -123,7 +128,7 @@ func main() {
 	//var playerFwd = linalg.Vec2{X: 0, Y: 0}
 	var playerRot = 0.0
 	var rayCount = 12
-	var fov = 0.72
+	var fov = 0.70
 
 	var p = &player.Player{
 		Position: &playerPos,

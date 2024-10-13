@@ -119,16 +119,42 @@ func DrawBarWithTexture(s tcell.Screen, screenPosX, screenPosY, screenXOffset, h
 }
 
 func scaleTextureSlice(textureSlice []tcell.Style, height int) []tcell.Style {
-	textureWidth := len(textureSlice)
+	texSliceLen := len(textureSlice)
 
 	scaledSlice := make([]tcell.Style, height)
 
-	for x := 0; x < height; x++ {
-		texX := (x * textureWidth) / height
-		scaledSlice[x] = textureSlice[texX]
+	texY := 0
+	for y := 0; y < height; y++ {
+		prevTexY := texY
+		texY = int(float64(y) / float64(height) * float64(texSliceLen))
+		if (prevTexY + 1) < texY {
+			scaledSlice[y] = combineStyles(prevTexY, texY, textureSlice)
+		} else {
+			scaledSlice[y] = textureSlice[texY]
+		}
 	}
 
 	return scaledSlice
+}
+
+func combineStyles(prevTexY, texY int, textureSlice []tcell.Style) tcell.Style {
+	prevStyle := textureSlice[prevTexY]
+	curStyle := textureSlice[texY]
+
+	_, prevBg, _ := prevStyle.Decompose()
+	_, curBg, _ := curStyle.Decompose()
+
+	var newColor tcell.Color
+	if curBg.Valid() {
+		tr, tg, tb := prevBg.RGB()
+		sr, sg, sb := curBg.RGB()
+		// TODO: not additive color mixing
+		newColor = tcell.NewRGBColor(tr+sr, tg+sg, tb+sb)
+	} else {
+		newColor = prevBg
+	}
+
+	return tcell.StyleDefault.Foreground(newColor).Background(newColor)
 }
 
 func DrawBarWithColor(s tcell.Screen, screenPosX, screenPosY, height int, style tcell.Style) {
